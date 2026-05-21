@@ -1,0 +1,93 @@
+/* ===== STEP TEXT ===== */
+.ir-step-text {
+  margin-top: 5px;
+  color: #777;
+  font-size: 13px;
+}
+
+/* ===== SECTION SPACING FIX ===== */
+.ir-internal-section {
+  margin-top: 20px;
+}
+
+/* ===== PAYMENT BUTTONS ===== */
+.ir-payment-options {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Full Payment Button (smaller width) */
+.ir-payment-btn {
+  flex: 0 0 180px;
+  height: 56px;
+  border: 2px solid #d1d5db;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 20px;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Advance Payment Button */
+.ir-payment-options .primary-btn {
+  flex: 1;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* Hover */
+.ir-payment-btn:hover {
+  border-color: #f97316;
+}
+
+/* Active */
+.ir-payment-btn.ir-active {
+  background: #f97316;
+  border-color: #f97316;
+  color: #ffffff;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.ir-internal-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Both buttons equal width */
+.ir-internal-actions .secondary-btn,
+.ir-internal-actions .primary-btn {
+  flex: 1;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+/* ===== PAGE WIDTH ===== */
+.ir-internal-page {
+  max-width: 900px;
+  margin: auto;
+}

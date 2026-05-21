@@ -1,0 +1,173 @@
+/* ===== DASHBOARD LAYOUT ===== */
+.db-dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===== MAIN CONTENT ===== */
+.db-main {
+  flex: 1;
+  padding: 25px 35px;
+}
+
+/* ===== DASHBOARD CARDS ===== */
+.db-cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.db-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: 0.2s;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.db-card:hover {
+  transform: translateY(-4px);
+}
+
+.db-stat-card {
+  min-height: 90px;
+  align-items: center;
+}
+
+.db-card-title {
+  font-size: 13px;
+  color: #777;
+}
+
+.db-card h2 {
+  margin: 5px 0;
+}
+
+.db-card-icon {
+  font-size: 22px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+/* ===== CARD COLORS ===== */
+.db-orange {
+  color: #ff7a00;
+}
+
+.db-green {
+  color: #22c55e;
+}
+
+.db-blue {
+  color: #3b82f6;
+}
+
+.db-red {
+  color: #ef4444;
+}
+
+/* ===== RESPONSIVE CARDS ===== */
+@media (max-width: 1400px) {
+  .db-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .db-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .db-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== DASHBOARD SECTIONS ===== */
+.db-section-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: flex-start;
+}
+
+.db-section {
+  flex: 1;
+  background: #fff;
+  padding: 25px;
+  border-radius: 16px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.db-section h3 {
+  margin-bottom: 15px;
+}
+
+.db-empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}
+
+/* ===== REVENUE BY PURPOSE ROW ===== */
+.db-revenue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.db-revenue-item:last-child {
+  border-bottom: none;
+}
+
+.db-revenue-item p {
+  margin: 0;
+}
+
+/* ===== RECENT BOOKINGS ROW ===== */
+.db-booking-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.db-booking-item:last-child {
+  border-bottom: none;
+}
+
+.db-booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.db-booking-name {
+  margin: 0;
+  font-size: 14px;
+}
+
+.db-booking-purpose {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.db-booking-amount {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: right;
+}

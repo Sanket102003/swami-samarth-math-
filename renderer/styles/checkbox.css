@@ -1,0 +1,33 @@
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.checkbox input {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  position: relative;
+}
+
+.checkbox input:checked + .checkmark {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.checkbox input:checked + .checkmark::after {
+  content: "✔";
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  left: 2px;
+  top: -1px;
+}

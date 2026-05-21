@@ -1,0 +1,94 @@
+/* ===== DROPDOWN CONTAINER ===== */
+.pd-dropdown-container {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* ===== DROPDOWN BOX (SELECT AREA) ===== */
+.pd-dropdown-box {
+  background: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+
+/* HOVER EFFECT */
+.pd-dropdown-box:hover {
+  border-color: #f97316;
+}
+
+/* ===== DROPDOWN LIST ===== */
+.pd-dropdown-list {
+  position: absolute;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+}
+
+/* ===== DROPDOWN ITEM ===== */
+.pd-dropdown-item {
+  padding: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pd-dropdown-item:hover {
+  background: #d4a937;
+  color: #fff;
+}
+
+/* ===== SELECTED ITEM ===== */
+.pd-dropdown-item.pd-selected {
+  background: #f97316;
+  color: #fff;
+}
+
+/* ===== SCROLLBAR ===== */
+.pd-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pd-dropdown-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+/* ===== DATEPICKER ===== */
+.custom-datepicker .react-datepicker__day--outside-month {
+  pointer-events: none;
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* ===== PAYMENT OPTIONS ===== */
+.pd-payment-options {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Both buttons equal width */
+.pd-payment-options .secondary-btn,
+.pd-payment-options .primary-btn {
+  flex: 1;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}

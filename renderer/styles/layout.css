@@ -1,0 +1,95 @@
+/* ===== DASHBOARD LAYOUT ===== */
+.dashboard {
+  display: flex;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  flex: 1;
+  padding: 25px 35px;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+
+  /* Keeps sidebar visible while page scrolls */
+  position: sticky;
+  top: 0;
+
+  /* Allows sidebar itself to scroll if menu becomes long */
+  overflow-y: auto;
+
+  background: linear-gradient(180deg, #5a2d14, #2d1408);
+  color: #fff;
+  padding: 20px;
+}
+
+/* LOGO */
+.logo {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sub-logo {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* MENU TITLE */
+.menu-title {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 15px 0 10px;
+}
+
+/* MENU ITEMS */
+.menu-item {
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.2s;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.menu-item.active {
+  border: 1px solid #f4b35e;
+  background: rgba(255,255,255,0.08);
+  color: #f4b35e;
+}
+
+/* ===== HEADER ===== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* TITLE */
+.header h2 {
+  margin: 0;
+}
+
+/* SUBTEXT */
+.header p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+/* ROLE BOX */
+.role-box {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff;
+}

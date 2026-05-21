@@ -1,0 +1,48 @@
+/* ===== AUTH PAGES ===== */
+
+.auth-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #fff7ed, #fef3c7);
+}
+
+.auth-box {
+  width: 350px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.auth-box h2 {
+  margin-bottom: 20px;
+}
+
+.auth-box .input {
+  margin-bottom: 12px;
+}
+
+.auth-switch {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.auth-switch span {
+  color: #f97316;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-switch span:hover {
+  text-decoration: underline;
+} 
+
+.logout-btn {
+  margin-left: 10px;
+  cursor: pointer;
+  color: red;
+  font-weight: bold;
+}

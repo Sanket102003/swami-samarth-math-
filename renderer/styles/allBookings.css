@@ -1,0 +1,267 @@
+/* prevent whole page horizontal scroll */
+.main {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ==========================================
+   SEARCH BOX
+========================================== */
+.search-box {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  transition: 0.2s;
+}
+
+.search-box input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* ==========================================
+   BOOKING LIST
+========================================== */
+.booking-list {
+  margin-top: 20px;
+}
+
+/* ==========================================
+   EMPTY STATE
+========================================== */
+.empty {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  text-align: center;
+  color: #777;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================
+   TABLE CONTAINER — only this scrolls horizontally
+========================================== */
+.all-bookings-container {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;        /* only this box scrolls */
+  max-width: 100%;
+}
+
+/* ==========================================
+   INNER WRAPPER — holds header + rows at min width
+========================================== */
+.all-bookings-inner {
+  min-width: 1500px;
+}
+
+/* ==========================================
+   TABLE HEADER
+========================================== */
+.all-bookings-header {
+  display: grid;
+  grid-template-columns:
+    130px   /* Booking ID */
+    180px   /* Name */
+    140px   /* Phone */
+    320px   /* Purpose */
+    130px   /* Total Amount */
+    130px   /* Paid Amount */
+    120px   /* Remaining */
+    110px   /* Status */
+    140px;  /* Date */
+
+  gap: 20px;
+  align-items: center;
+  padding: 0 10px 14px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+
+  font-size: 13px;
+  font-weight: 700;
+  color: #020202;
+  text-transform: uppercase;
+}
+
+/* ==========================================
+   TABLE ROW
+========================================== */
+.all-bookings-row {
+  display: grid;
+  grid-template-columns:
+    130px   /* Booking ID */
+    180px   /* Name */
+    140px   /* Phone */
+    320px   /* Purpose */
+    130px   /* Total Amount */
+    130px   /* Paid Amount */
+    120px   /* Remaining */
+    110px   /* Status */
+    140px;  /* Date */
+
+  gap: 20px;
+  align-items: center;
+
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 18px 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: 0.2s;
+  margin-bottom: 10px;
+}
+
+.all-bookings-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ==========================================
+   ALLOW GRID ITEMS TO SHRINK
+========================================== */
+.all-bookings-header > div,
+.all-bookings-row > div {
+  min-width: 0;
+}
+
+/* ==========================================
+   COLUMN STYLES
+========================================== */
+.all-bookings-id,
+.all-bookings-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.all-bookings-phone,
+.all-bookings-date {
+  font-size: 14px;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.all-bookings-purpose {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.all-bookings-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #059669;
+  white-space: nowrap;
+}
+
+.all-bookings-status {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   STATUS COLORS
+========================================== */
+.status-approved { color: #16a34a; }
+.status-pending  { color: #d97706; }
+.status-cancelled { color: #dc2626; }
+
+/* ==========================================
+   MODAL OVERLAY
+========================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* ==========================================
+   MODAL BOX
+========================================== */
+.modal {
+  width: 100%;
+  max-width: 450px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal p {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.modal textarea:focus {
+  border-color: #f97316;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 1200px) {
+  .all-bookings-header {
+    display: none;
+  }
+
+  .all-bookings-inner {
+    min-width: unset;
+  }
+
+  .all-bookings-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 18px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal {
+    margin: 20px;
+    padding: 20px;
+  }
+}

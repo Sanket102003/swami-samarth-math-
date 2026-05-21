@@ -1,0 +1,77 @@
+{
+  "private": true,
+  "name": "swami-samarth-math",
+  "description": "Swami Samarth Math Management System",
+  "version": "1.0.0",
+  "author": "Sanket Nikam",
+  "type": "module",
+  "main": "main/main.js",
+  "scripts": {
+    "dev": "nextron",
+    "build": "nextron build",
+    "dist": "electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "date-fns": "^4.2.1",
+    "electron-serve": "^3.0.0",
+    "electron-store": "^11.0.2",
+    "react-datepicker": "^9.1.0",
+    "react-icons": "^5.6.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.29.5",
+    "@babel/preset-react": "^7.28.5",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "babel-jest": "^30.4.1",
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "next": "^16.2.1",
+    "nextron": "^10.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "build": {
+    "appId": "com.swamisamarth.math",
+    "productName": "Swami Samarth Math",
+    "copyright": "Copyright © 2026 Sanket Nikam",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main/**/*",
+      "renderer/.next/**/*",
+      "renderer/pages/**/*",
+      "renderer/components/**/*",
+      "renderer/styles/**/*",
+      "renderer/public/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "main/main.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Swami Samarth Math"
+    }
+  }
+}

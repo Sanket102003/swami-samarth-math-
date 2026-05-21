@@ -1,0 +1,81 @@
+/* ===== TAX RECEIPT PAGE ===== */
+
+/* ===== 80G CHECKBOX ===== */
+.tr-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.tr-checkbox input {
+  display: none;
+}
+
+.tr-checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  position: relative;
+  transition: 0.2s;
+}
+
+/* CHECKED STATE */
+.tr-checkbox input:checked + .tr-checkmark {
+  background: #f97316;
+  border-color: #f97316;
+}
+
+.tr-checkbox input:checked + .tr-checkmark::after {
+  content: "✔";
+  position: absolute;
+  color: #fff;
+  font-size: 12px;
+  left: 2px;
+  top: -1px;
+}
+
+/* ===== PAYMENT BOX ===== */
+.tr-payment-box {
+  background: #fff7ed;
+  border: 1px solid #f97316;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+/* ===== SECTION SPACING ===== */
+.tr-section {
+  margin-top: 20px;
+}
+
+/* ===== STEP TEXT ===== */
+.tr-step-text {
+  margin-top: 5px;
+  color: #777;
+  font-size: 13px;
+}
+
+/* ===== BANK LABEL ===== */
+.tr-bank-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 10px;
+  display: block;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.tr-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.tr-actions .secondary-btn,
+.tr-actions .primary-btn {
+  flex: 1;
+}

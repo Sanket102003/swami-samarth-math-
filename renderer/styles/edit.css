@@ -1,0 +1,88 @@
+/* MAIN CONTAINER */
+.edit-container {
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  width: 60%;
+  margin: 30px auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* SECTION */
+.form-section {
+  margin-top: 25px;
+}
+
+/* SECTION TITLE */
+.form-section h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* INPUT + SELECT */
+.form-section input,
+.form-section select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+/* INPUT FOCUS EFFECT */
+.form-section input:focus,
+.form-section select:focus {
+  border-color: #8B4513;
+  outline: none;
+  box-shadow: 0 0 4px rgba(139, 69, 19, 0.3);
+}
+
+/* SAVE BUTTON */
+.save-btn {
+  width: 100%;
+  margin-top: 30px;
+  padding: 14px;
+  background: #8B4513;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.save-btn:hover {
+  background: #6e3410;
+}
+
+/* EDIT BUTTON (FOR LIST PAGE) */
+.edit-btn {
+  margin-left: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #8B4513;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: 0.2s;
+}
+
+.edit-btn:hover {
+  background: #6e3410;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .edit-container {
+    width: 90%;
+    padding: 15px;
+  }
+}

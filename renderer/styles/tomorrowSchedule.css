@@ -1,0 +1,109 @@
+/* ===== DATE TEXT ===== */
+.date-text {
+  margin-top: 5px;
+  color: #777;
+  font-size: 14px;
+}
+
+/* ===== TOP ACTIONS ===== */
+.top-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* ===== PRINT BUTTON ===== */
+.print-btn {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.print-btn:hover {
+  background: #f3f4f6;
+}
+
+/* ===== MAIN BOX ===== */
+.schedule-box {
+  margin-top: 20px;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty {
+  background: #fff;
+  padding: 30px;
+  text-align: center;
+  border-radius: 16px;
+  color: #777;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* ===== CARD ===== */
+.schedule-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 16px 20px;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: 0.2s;
+}
+
+.schedule-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ===== LEFT ===== */
+.schedule-left {
+  flex: 1;
+}
+
+.schedule-left h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.schedule-left p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+/* ===== CENTER ===== */
+.schedule-center {
+  flex: 1;
+  text-align: center;
+}
+
+.schedule-center p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.schedule-center strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+/* ===== RIGHT ===== */
+.schedule-right {
+  flex: 1;
+  text-align: right;
+}
+
+.schedule-right span {
+  font-size: 14px;
+  font-weight: 500;
+  background: #e0f2fe;
+  padding: 6px 12px;
+  border-radius: 8px;
+}

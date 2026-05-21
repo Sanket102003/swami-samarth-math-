@@ -1,0 +1,296 @@
+/* ==========================================
+   DASHBOARD DETAILS PAGE
+========================================== */
+
+/* Main white container */
+.details-container {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+/* Back button */
+.back-btn {
+  margin-bottom: 20px;
+}
+
+/* ==========================================
+   HEADER ROW
+========================================== */
+.details-header {
+  display: grid;
+  grid-template-columns:
+    220px   /* Name */
+    150px   /* Phone */
+    1fr     /* Purpose */
+    140px   /* Amount */
+    120px   /* Status */
+    140px;  /* Action */
+
+  gap: 20px;
+  align-items: center;
+
+  padding: 0 20px 12px;
+  margin-bottom: 10px;
+
+  border-bottom: 2px solid #e5e7eb;
+
+  font-size: 13px;
+  font-weight: 700;
+  color: #020202;
+  text-transform: uppercase;
+}
+
+/* Header alignment */
+.details-header > div:nth-child(4) {
+  text-align: right;
+}
+
+.details-header > div:nth-child(5) {
+  text-align: center;
+}
+
+.details-header > div:nth-child(6) {
+  text-align: center;
+}
+
+/* ==========================================
+   BOOKING LIST
+========================================== */
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ==========================================
+   EACH ROW CARD
+========================================== */
+.details-card {
+  display: grid;
+  grid-template-columns:
+    220px   /* Name */
+    150px   /* Phone */
+    1fr     /* Purpose */
+    140px   /* Amount */
+    120px   /* Status */
+    140px;  /* Action */
+
+  gap: 20px;
+  align-items: center;
+
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: 0.2s;
+}
+
+/* Allow grid columns to shrink properly */
+.details-header > div,
+.details-card > div {
+  min-width: 0;
+}
+
+.details-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Remove default margins */
+.details-card h4,
+.details-card p,
+.details-card strong {
+  margin: 0;
+}
+
+/* ==========================================
+   COLUMN STYLES
+========================================== */
+.details-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.details-phone {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.details-purpose {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.details-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: #059669;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.details-status {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.details-action {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ==========================================
+   TEXT OVERFLOW HANDLING
+========================================== */
+.details-name,
+.details-phone,
+.details-purpose,
+.details-reason {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================
+   STATUS COLORS
+========================================== */
+.status-approved {
+  color: #16a34a;
+}
+
+.status-pending {
+  color: #d97706;
+}
+
+.status-cancelled {
+  color: #dc2626;
+}
+
+/* ==========================================
+   EDIT BUTTON
+========================================== */
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  min-width: 120px;
+  height: 46px;
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #92400e;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.edit-btn:hover {
+  background: #7c2d12;
+  transform: translateY(-1px);
+}
+
+/* ==========================================
+   EMPTY / LOADING STATES
+========================================== */
+.details-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #020202;
+}
+
+.details-loading {
+  padding: 20px;
+  color: #020202;
+}
+
+/* ==========================================
+   REASON COLUMN
+========================================== */
+.details-reason {
+  font-size: 14px;
+  color: #7f1d1d;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* ==========================================
+   CANCELLED BOOKINGS LAYOUT ONLY
+========================================== */
+.details-header.cancelled-layout {
+  grid-template-columns:
+    120px   /* Name */
+    110px   /* Phone */
+    260px   /* Purpose */
+    110px   /* Amount */
+    100px   /* Status */
+    1fr;    /* Reason */
+}
+
+.details-card.cancelled-layout {
+  grid-template-columns:
+    120px   /* Name */
+    110px   /* Phone */
+    260px   /* Purpose */
+    110px   /* Amount */
+    100px   /* Status */
+    1fr;    /* Reason */
+}
+
+.details-header.cancelled-layout > div:nth-child(6) {
+  text-align: left;
+}
+
+.details-card.cancelled-layout .details-reason {
+  min-width: 250px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 1024px) {
+  .details-header {
+    display: none;
+  }
+
+  .details-card,
+  .details-card.cancelled-layout {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .details-amount,
+  .details-status {
+    text-align: left;
+  }
+
+  .details-action {
+    justify-content: flex-start;
+  }
+
+  .edit-btn {
+    width: fit-content;
+  }
+
+  .details-card.cancelled-layout .details-reason {
+    min-width: auto;
+  }
+}
