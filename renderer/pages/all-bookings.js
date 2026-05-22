@@ -13,6 +13,7 @@ function AllBookings() {
   const [cancelReason, setCancelReason] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
   /* ======================================================
      PURPOSES THAT SUPPORT PARTIAL PAYMENT
@@ -30,6 +31,10 @@ function AllBookings() {
   /* ======================================================
      FETCH ALL BOOKINGS
   ====================================================== */
+  useEffect(() => {
+    setUserRole(localStorage.getItem("role"));
+  }, []);
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -197,6 +202,7 @@ return (
               <div>Remaining</div>
               <div>Status</div>
               <div>Date</div>
+              <div>Action</div>
             </div>
 
             {/* TABLE ROWS */}
@@ -318,6 +324,23 @@ return (
                         booking.bookingDate ||
                           booking.date
                       )}
+                    </div>
+
+                    {/* CANCEL ACTION */}
+                    <div>
+                      {userRole === "Admin" &&
+                        status.toLowerCase() !== "cancelled" && (
+                          <button
+                            className="cancel-btn"
+                            onClick={() =>
+                              setConfirmId(
+                                booking._id || booking.id
+                              )
+                            }
+                          >
+                            Cancel
+                          </button>
+                        )}
                     </div>
                   </div>
                 );

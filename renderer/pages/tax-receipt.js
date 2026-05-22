@@ -13,14 +13,9 @@ export default function TaxReceipt() {
   const [selectedBank, setSelectedBank] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const banks = [
-    "ICICI Bank",
-    "HDFC Bank",
-    "SBI Bank",
-    "Axis Bank",
-    "Bank of Baroda",
-    "Kotak Bank",
-  ];
+  const banks = is80G
+    ? ["ICICI Bank", "CDB Bank", "SBI Bank"]
+    : ["ICICI Bank", "CDB Bank"];
 
   /* ======================================================
      PURPOSES THAT SUPPORT ADVANCE PAYMENT
@@ -185,9 +180,6 @@ export default function TaxReceipt() {
 
       console.log("CREATE TAX BOOKING RESPONSE:", response);
 
-      /* CLEAR TEMP DATA */
-      localStorage.removeItem("bookingForm");
-
       /* GET GENERATED BOOKING ID */
       const receiptId =
         response?.booking?.bookingId ||
@@ -195,6 +187,15 @@ export default function TaxReceipt() {
         response?.bookingId ||
         response?.receiptId ||
         "BOOKING";
+
+      /* SAVE FOR PRINT */
+      localStorage.setItem("lastBooking", JSON.stringify({
+        ...(response?.booking || {}),
+        bookingId: receiptId,
+      }));
+
+      /* CLEAR TEMP DATA */
+      localStorage.removeItem("bookingForm");
 
       /* REDIRECT TO SUCCESS PAGE */
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
@@ -226,7 +227,13 @@ export default function TaxReceipt() {
             <input
               type="checkbox"
               checked={is80G}
-              onChange={() => setIs80G(!is80G)}
+              onChange={() => {
+                const next80G = !is80G;
+                setIs80G(next80G);
+                if (!next80G && selectedBank === "SBI Bank") {
+                  setSelectedBank("");
+                }
+              }}
             />
             <span className="tr-checkmark"></span>
             80G Applicable

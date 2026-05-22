@@ -7,7 +7,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Serve the exported Next.js files in production
 const loadURL = serve({
-  directory: "renderer/.next/exported",
+  directory: "app",
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,11 +30,12 @@ async function createWindow() {
   if (isDev) {
     await mainWindow.loadURL("http://localhost:8888");
     mainWindow.webContents.openDevTools();
+    // Restore focus to main window after DevTools opens
+    mainWindow.webContents.once("devtools-opened", () => {
+      mainWindow.webContents.focus();
+    });
   } else {
     await loadURL(mainWindow);
-
-    // Open DevTools in production to detect blank-screen errors
-    mainWindow.webContents.openDevTools();
   }
 }
 

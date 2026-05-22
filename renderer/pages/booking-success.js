@@ -49,28 +49,27 @@ export default function BookingSuccess() {
           {/* Buttons */}
           <div className="success-actions">
             <button
-              className="primary-btn"
-              onClick={() =>
-                router.push(
-                  "/new-booking"
-                )
-              }
+              className="primary-btn success-print-btn"
+              onClick={() => router.push("/receipt-print")}
             >
-              New Booking /
-              नवीन बुकिंग
+              Print Receipt / पावती प्रिंट
             </button>
 
-            <button
-              className="secondary-btn"
-              onClick={() =>
-                router.push(
-                  "/all-bookings"
-                )
-              }
-            >
-              View All /
-              सर्व पहा
-            </button>
+            <div className="success-secondary-row">
+              <button
+                className="secondary-btn"
+                onClick={() => router.push("/new-booking")}
+              >
+                New Booking / नवीन बुकिंग
+              </button>
+
+              <button
+                className="secondary-btn"
+                onClick={() => router.push("/all-bookings")}
+              >
+                View All / सर्व पहा
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -80,7 +80,8 @@
     130px   /* Paid Amount */
     120px   /* Remaining */
     110px   /* Status */
-    140px;  /* Date */
+    140px   /* Date */
+    100px;  /* Action */
 
   gap: 20px;
   align-items: center;
@@ -108,7 +109,8 @@
     130px   /* Paid Amount */
     120px   /* Remaining */
     110px   /* Status */
-    140px;  /* Date */
+    140px   /* Date */
+    100px;  /* Action */
 
   gap: 20px;
   align-items: center;
@@ -185,6 +187,31 @@
 .status-approved { color: #16a34a; }
 .status-pending  { color: #d97706; }
 .status-cancelled { color: #dc2626; }
+
+/* ==========================================
+   CANCEL BUTTON
+========================================== */
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.cancel-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
 
 /* ==========================================
    MODAL OVERLAY

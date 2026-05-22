@@ -22,22 +22,21 @@
 .details-header {
   display: grid;
   grid-template-columns:
-    220px   /* Name */
-    150px   /* Phone */
+    180px   /* Name */
+    130px   /* Phone */
     1fr     /* Purpose */
-    140px   /* Amount */
-    120px   /* Status */
-    140px;  /* Action */
+    120px   /* Amount */
+    100px;  /* Status */
 
-  gap: 20px;
+  gap: 12px;
   align-items: center;
 
-  padding: 0 20px 12px;
-  margin-bottom: 10px;
+  padding: 0 16px 10px;
+  margin-bottom: 6px;
 
   border-bottom: 2px solid #e5e7eb;
 
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   color: #020202;
   text-transform: uppercase;
@@ -62,7 +61,7 @@
 .details-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 6px;
 }
 
 /* ==========================================
@@ -71,21 +70,20 @@
 .details-card {
   display: grid;
   grid-template-columns:
-    220px   /* Name */
-    150px   /* Phone */
+    180px   /* Name */
+    130px   /* Phone */
     1fr     /* Purpose */
-    140px   /* Amount */
-    120px   /* Status */
-    140px;  /* Action */
+    120px   /* Amount */
+    100px;  /* Status */
 
-  gap: 20px;
+  gap: 12px;
   align-items: center;
 
   background: #ffffff;
   border: 1px solid #f0f0f0;
-  border-radius: 14px;
-  padding: 18px 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   transition: 0.2s;
 }
 
@@ -111,34 +109,36 @@
    COLUMN STYLES
 ========================================== */
 .details-name {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #111827;
 }
 
 .details-phone {
-  font-size: 14px;
+  font-size: 13px;
   color: #4b5563;
 }
 
 .details-purpose {
-  font-size: 14px;
+  font-size: 13px;
   color: #374151;
   line-height: 1.4;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .details-amount {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #059669;
   text-align: right;
   white-space: nowrap;
 }
 
 .details-status {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   text-align: center;
   white-space: nowrap;
 }
@@ -182,19 +182,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
 
-  min-width: 120px;
-  height: 46px;
-  padding: 0 18px;
+  min-width: 80px;
+  height: 32px;
+  padding: 0 12px;
 
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
 
   background: #92400e;
   color: #ffffff;
 
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
 
   cursor: pointer;
@@ -261,6 +261,20 @@
 
 .details-card.cancelled-layout .details-reason {
   min-width: 250px;
+}
+
+/* ==========================================
+   PENDING BOOKINGS LAYOUT — adds action col
+========================================== */
+.details-header.pending-layout,
+.details-card.pending-layout {
+  grid-template-columns:
+    160px   /* Name */
+    120px   /* Phone */
+    1fr     /* Purpose */
+    110px   /* Amount */
+    90px    /* Status */
+    110px;  /* Action */
 }
 
 /* ==========================================

@@ -120,15 +120,15 @@
 ========================================== */
 .success-actions {
   display: flex;
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
-  justify-content: center;
 }
 
-/* New Booking Button */
-.success-actions .primary-btn {
-  flex: 1;
-  min-height: 56px;
+/* Print Receipt — full width on top */
+.success-print-btn {
+  width: 100%;
+  min-height: 52px;
   border-radius: 14px;
   font-size: 16px;
   font-weight: 700;
@@ -140,15 +140,20 @@
   box-sizing: border-box;
 }
 
-/* View All Button */
-.success-actions .secondary-btn {
-  flex: 0 0 auto;   /* prevent stretching */
-  width: 180px;     /* fixed width */
-  min-height: 56px;
+/* Row for New Booking + View All */
+.success-secondary-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.success-secondary-row .secondary-btn {
+  flex: 1;
+  min-height: 48px;
   border-radius: 14px;
-  font-size: 16px;
-  font-weight: 700;
-  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: center;

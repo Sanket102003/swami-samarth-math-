@@ -164,14 +164,12 @@ export default function InternalReceipt() {
           remainingAmount,
           paymentType,
           status,
+          receiptType: "Internal",
           reason: savedForm.reason || "",
         }),
       });
 
       console.log("CREATE BOOKING RESPONSE:", response);
-
-      /* CLEAR TEMP STORAGE */
-      localStorage.removeItem("bookingForm");
 
       /* GET GENERATED BOOKING ID */
       const receiptId =
@@ -180,6 +178,15 @@ export default function InternalReceipt() {
         response?.bookingId ||
         response?.receiptId ||
         "BOOKING";
+
+      /* SAVE FOR PRINT */
+      localStorage.setItem("lastBooking", JSON.stringify({
+        ...(response?.booking || {}),
+        bookingId: receiptId,
+      }));
+
+      /* CLEAR TEMP STORAGE */
+      localStorage.removeItem("bookingForm");
 
       /* REDIRECT TO SUCCESS PAGE */
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
