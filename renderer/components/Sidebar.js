@@ -44,6 +44,7 @@ export default function Sidebar() {
 
      Accountant:
        - Dashboard
+       - New Booking   ← added
        - All Bookings
        - Reports
        - My Profile
@@ -69,6 +70,7 @@ export default function Sidebar() {
 
     Accountant: [
       "dashboard",
+      "new_booking",  // ← added
       "all_bookings",
       "reports",
       "profile",
@@ -123,9 +125,7 @@ export default function Sidebar() {
 
   // Filter menu according to current role
   const allowedMenu = role
-    ? menu.filter((item) =>
-        ROLE_MENU[role]?.includes(item.key)
-      )
+    ? menu.filter((item) => ROLE_MENU[role]?.includes(item.key))
     : [];
 
   // Logout
@@ -148,9 +148,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="logo">
         🙏 Swami Samarth Math
-        <div className="sub-logo">
-          Bhuigaon-Vasai
-        </div>
+        <div className="sub-logo">Bhuigaon-Vasai</div>
       </div>
 
       {/* Menu title */}
@@ -158,43 +156,27 @@ export default function Sidebar() {
 
       {/* Dynamic menu items */}
       {allowedMenu.map((item) => {
-        const isActive =
-          router.pathname === item.path;
-
+        const isActive = router.pathname === item.path;
         return (
           <div
             key={item.key}
-            className={`menu-item ${
-              isActive ? "active" : ""
-            }`}
-            onClick={() =>
-              router.push(item.path)
-            }
+            className={`menu-item ${isActive ? "active" : ""}`}
+            onClick={() => router.push(item.path)}
           >
-            <span className="icon">
-              {item.icon}
-            </span>
+            <span className="icon">{item.icon}</span>
             {item.name}
           </div>
         );
       })}
 
       {/* Account Section */}
-      <div
-        className="menu-title"
-        style={{ marginTop: "20px" }}
-      >
+      <div className="menu-title" style={{ marginTop: "20px" }}>
         Account
       </div>
 
       {/* Logout */}
-      <div
-        className="menu-item logout"
-        onClick={handleLogout}
-      >
-        <span className="icon">
-          <FaSignOutAlt />
-        </span>
+      <div className="menu-item logout" onClick={handleLogout}>
+        <span className="icon"><FaSignOutAlt /></span>
         Logout
       </div>
     </div>

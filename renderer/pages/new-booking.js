@@ -26,10 +26,8 @@ function NewBooking() {
       return;
     }
 
-    // Save selected receipt type
     localStorage.setItem("receiptType", selected);
 
-    // Navigate to booking form pages
     if (selected === "internal") {
       router.push("/internal-receipt");
     } else if (selected === "tax") {
@@ -99,6 +97,6 @@ function NewBooking() {
 
 /* ======================================================
    ROLE-BASED ACCESS
-   Only Admin and Entry Operator can create bookings.
+   Admin, Entry Operator and Accountant can create bookings.
 ====================================================== */
-export default withAuth(NewBooking, ["Admin", "Entry Operator"]);
+export default withAuth(NewBooking, ["Admin", "Entry Operator", "Accountant"]);

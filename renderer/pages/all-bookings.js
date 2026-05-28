@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
@@ -15,31 +15,41 @@ function AllBookings() {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
-  /* ======================================================
-     PURPOSES THAT SUPPORT PARTIAL PAYMENT
-  ====================================================== */
-  const shouldShowPaymentBreakup = (purpose = "") => {
-    const eligiblePurposes = [
-      "Full Bhandara / पूर्ण भंडारा (₹25,000)",
-      "Half Bhandara / अर्ध भंडारा (₹15,000)",
-      "Shirapasad / शिराप्रसाद (₹5,001)",
-    ];
+  const tableRef = useRef(null);
+  const headerRef = useRef(null);
+  const scrollbarRef = useRef(null);
 
-    return eligiblePurposes.includes(purpose);
+  /* ======================================================
+     SYNC HORIZONTAL SCROLL
+  ====================================================== */
+  const handleTableScroll = () => {
+    if (headerRef.current)
+      headerRef.current.scrollLeft = tableRef.current.scrollLeft;
+    if (scrollbarRef.current)
+      scrollbarRef.current.scrollLeft = tableRef.current.scrollLeft;
+  };
+
+  const handleScrollbarScroll = () => {
+    if (tableRef.current)
+      tableRef.current.scrollLeft = scrollbarRef.current.scrollLeft;
+    if (headerRef.current)
+      headerRef.current.scrollLeft = scrollbarRef.current.scrollLeft;
   };
 
   /* ======================================================
-     FETCH ALL BOOKINGS
+     LOAD USER ROLE
   ====================================================== */
   useEffect(() => {
     setUserRole(localStorage.getItem("role"));
   }, []);
 
+  /* ======================================================
+     FETCH ALL BOOKINGS
+  ====================================================== */
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const data = await apiRequest("/Bookings");
-
         if (Array.isArray(data)) {
           setBookings(data);
         } else {
@@ -47,9 +57,7 @@ function AllBookings() {
         }
       } catch (err) {
         console.error("Bookings fetch error:", err);
-
         const errorMsg = (err.message || "").toLowerCase();
-
         if (
           errorMsg.includes("token") ||
           errorMsg.includes("expired") ||
@@ -64,45 +72,22 @@ function AllBookings() {
         setLoading(false);
       }
     };
-
     fetchBookings();
   }, []);
 
-/* ======================================================
-   SEARCH FILTER
-====================================================== */
-const filteredBookings = useMemo(() => {
-  const term = searchTerm
-    .toLowerCase()
-    .trim();
-
-  return bookings.filter(
-    (booking) =>
-      String(
-        booking.name || ""
-      )
-        .toLowerCase()
-        .includes(term) ||
-
-      String(
-        booking.bookingId || ""
-      )
-        .toLowerCase()
-        .includes(term) ||
-
-      String(
-        booking.phone || ""
-      )
-        .toLowerCase()
-        .includes(term) ||
-
-      String(
-        booking._id || ""
-      )
-        .toLowerCase()
-        .includes(term)
-  );
-}, [bookings, searchTerm]);
+  /* ======================================================
+     SEARCH FILTER
+  ====================================================== */
+  const filteredBookings = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return bookings.filter(
+      (booking) =>
+        String(booking.name || "").toLowerCase().includes(term) ||
+        String(booking.bookingId || "").toLowerCase().includes(term) ||
+        String(booking.phone || "").toLowerCase().includes(term) ||
+        String(booking._id || "").toLowerCase().includes(term)
+    );
+  }, [bookings, searchTerm]);
 
   /* ======================================================
      CANCEL BOOKING
@@ -112,31 +97,20 @@ const filteredBookings = useMemo(() => {
       alert("Please enter cancellation reason");
       return;
     }
-
     try {
       await apiRequest("/cancel_booking", {
         method: "POST",
-        body: JSON.stringify({
-          id: confirmId,
-          reason: cancelReason,
-        }),
+        body: JSON.stringify({ id: confirmId, reason: cancelReason }),
       });
-
       setBookings((prev) =>
         prev.map((booking) =>
           (booking._id || booking.id) === confirmId
-            ? {
-                ...booking,
-                status: "Cancelled",
-                reason: cancelReason,
-              }
+            ? { ...booking, status: "Cancelled", reason: cancelReason }
             : booking
         )
       );
-
       setConfirmId(null);
       setCancelReason("");
-
       alert("Booking cancelled successfully");
     } catch (err) {
       console.error("Cancel booking error:", err);
@@ -145,272 +119,195 @@ const filteredBookings = useMemo(() => {
   };
 
   /* ======================================================
+     HELPERS
+  ====================================================== */
+  const formatCurrency = (value) =>
+    `₹${Number(value || 0).toLocaleString("en-IN")}`;
+
+  const formatDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (isNaN(date)) return value;
+    return date.toLocaleDateString("en-GB");
+  };
+
+  /* ======================================================
      LOADING
   ====================================================== */
   if (loading) {
     return (
-      <div className="dashboard">
+      <div className="db-dashboard">
         <Sidebar />
-        <div className="main">
+        <div className="db-main">
           <Header title="All Bookings / सर्व बुकिंग" />
-          <p style={{ padding: "20px" }}>
-            Loading bookings...
-          </p>
+          <p style={{ padding: "20px" }}>Loading bookings...</p>
         </div>
       </div>
     );
   }
 
-/* ======================================================
-   UI
-====================================================== */
-return (
-  <div className="dashboard">
-    <Sidebar />
+  /* ======================================================
+     UI
+  ====================================================== */
+  return (
+    <div className="db-dashboard">
+      <Sidebar />
 
-    <div className="main">
-      <Header title="All Bookings / सर्व बुकिंग" />
+      <div className="db-main">
+        <Header title="All Bookings / सर्व बुकिंग" />
 
-      {/* SEARCH BOX */}
-      <div className="search-box">
-        <input
-          type="text"
-          placeholder="Search by Name, Booking ID, or Phone..."
-          value={searchTerm}
-          onChange={(e) =>
-            setSearchTerm(e.target.value)
-          }
-        />
-      </div>
-
-      {/* BOOKING LIST */}
-      <div className="booking-list">
-        {filteredBookings.length === 0 ? (
-          <div className="empty">
-            No bookings found.
-          </div>
-        ) : (
-          <div className="all-bookings-container">
-            {/* TABLE HEADER */}
-            <div className="all-bookings-header">
-              <div>Booking ID</div>
-              <div>Name</div>
-              <div>Phone</div>
-              <div>Purpose</div>
-              <div>Total Amount</div>
-              <div>Paid Amount</div>
-              <div>Remaining</div>
-              <div>Status</div>
-              <div>Date</div>
-              <div>Action</div>
-            </div>
-
-            {/* TABLE ROWS */}
-            <div className="all-bookings-list">
-              {filteredBookings.map((booking) => {
-                const rowKey =
-                  booking._id ||
-                  booking.id;
-
-                const status =
-                  booking.status ||
-                  "Pending";
-
-                const statusClass =
-                  status
-                    .toLowerCase()
-                    .includes(
-                      "approved"
-                    )
-                    ? "status-approved"
-                    : status
-                        .toLowerCase()
-                        .includes(
-                          "cancelled"
-                        )
-                    ? "status-cancelled"
-                    : "status-pending";
-
-                const formatCurrency = (
-                  value
-                ) =>
-                  `₹${Number(
-                    value || 0
-                  ).toLocaleString(
-                    "en-IN"
-                  )}`;
-
-                const formatDate = (
-                  value
-                ) => {
-                  if (!value)
-                    return "-";
-
-                  const date =
-                    new Date(value);
-
-                  if (
-                    isNaN(date)
-                  )
-                    return value;
-
-                  return date.toLocaleDateString(
-                    "en-GB"
-                  );
-                };
-
-                return (
-                  <div
-                    key={rowKey}
-                    className="all-bookings-row"
-                  >
-                    {/* BOOKING ID */}
-                    <div className="all-bookings-id">
-                      {booking.bookingId ||
-                        rowKey ||
-                        "-"}
-                    </div>
-
-                    {/* NAME */}
-                    <div className="all-bookings-name">
-                      {booking.name ||
-                        "-"}
-                    </div>
-
-                    {/* PHONE */}
-                    <div className="all-bookings-phone">
-                      {booking.phone ||
-                        "-"}
-                    </div>
-
-                    {/* PURPOSE */}
-                    <div className="all-bookings-purpose">
-                      {booking.purpose ||
-                        "-"}
-                    </div>
-
-                    {/* TOTAL AMOUNT */}
-                    <div className="all-bookings-amount">
-                      {formatCurrency(
-                        booking.amount
-                      )}
-                    </div>
-
-                    {/* PAID AMOUNT */}
-                    <div className="all-bookings-amount">
-                      {formatCurrency(
-                        booking.advance ??
-                          booking.paidAmount
-                      )}
-                    </div>
-
-                    {/* REMAINING */}
-                    <div className="all-bookings-amount">
-                      {formatCurrency(
-                        booking.remainingAmount
-                      )}
-                    </div>
-
-                    {/* STATUS */}
-                    <div
-                      className={`all-bookings-status ${statusClass}`}
-                    >
-                      {status}
-                    </div>
-
-                    {/* DATE */}
-                    <div className="all-bookings-date">
-                      {formatDate(
-                        booking.bookingDate ||
-                          booking.date
-                      )}
-                    </div>
-
-                    {/* CANCEL ACTION */}
-                    <div>
-                      {userRole === "Admin" &&
-                        status.toLowerCase() !== "cancelled" && (
-                          <button
-                            className="cancel-btn"
-                            onClick={() =>
-                              setConfirmId(
-                                booking._id || booking.id
-                              )
-                            }
-                          >
-                            Cancel
-                          </button>
-                        )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* CANCEL MODAL */}
-    {confirmId && (
-      <div className="modal-overlay">
-        <div className="modal">
-          <p>
-            Enter cancellation
-            reason
-          </p>
-
-          <textarea
-            className="input"
-            rows="4"
-            value={cancelReason}
-            onChange={(e) =>
-              setCancelReason(
-                e.target.value
-              )
-            }
-            placeholder="Enter reason..."
-            style={{
-              marginTop: "10px",
-              marginBottom:
-                "15px",
-            }}
+        {/* SEARCH BOX */}
+        <div className="ab-search-box">
+          <input
+            type="text"
+            placeholder="Search by Name, Booking ID, or Phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
 
-          <div className="modal-actions">
-            <button
-              className="primary-btn"
-              onClick={
-                confirmCancel
-              }
-            >
-              Confirm Cancel
-            </button>
+        {/* BOOKING LIST */}
+        <div className="ab-booking-list">
+          {filteredBookings.length === 0 ? (
+            <div className="ab-empty">No bookings found.</div>
+          ) : (
+            <div className="ab-container">
 
-            <button
-              className="secondary-btn"
-              onClick={() => {
-                setConfirmId(
-                  null
-                );
-                setCancelReason(
-                  ""
-                );
-              }}
-            >
-              Close
-            </button>
-          </div>
+              {/* STICKY HEADER */}
+              <div className="ab-sticky-header" ref={headerRef}>
+                <div className="ab-header">
+                  <div>Booking ID</div>
+                  <div>Name</div>
+                  <div>Phone</div>
+                  <div>Purpose</div>
+                  <div>Total Amount</div>
+                  <div>Paid Amount</div>
+                  <div>Remaining</div>
+                  <div>Status</div>
+                  <div>Date</div>
+                  <div>Action</div>
+                </div>
+              </div>
+
+              {/* SCROLLABLE BODY */}
+              <div
+                className="ab-table-scroll"
+                ref={tableRef}
+                onScroll={handleTableScroll}
+              >
+                {/* Invisible spacer */}
+                <div className="ab-header ab-header-spacer">
+                  <div>Booking ID</div>
+                  <div>Name</div>
+                  <div>Phone</div>
+                  <div>Purpose</div>
+                  <div>Total Amount</div>
+                  <div>Paid Amount</div>
+                  <div>Remaining</div>
+                  <div>Status</div>
+                  <div>Date</div>
+                  <div>Action</div>
+                </div>
+
+                {/* ROWS */}
+                <div className="ab-list">
+                  {filteredBookings.map((booking) => {
+                    const rowKey = booking._id || booking.id;
+                    const status = booking.status || "Pending";
+                    const statusLower = status.toLowerCase();
+
+                    const statusClass = statusLower.includes("approved")
+                      ? "ab-status-approved"
+                      : statusLower.includes("cancelled")
+                      ? "ab-status-cancelled"
+                      : "ab-status-pending";
+
+                    // FIX: Show Cancel button only for Pending bookings
+                    // Approved and Cancelled bookings do NOT show Cancel button
+                    const showCancelBtn =
+                      userRole === "Admin" &&
+                      statusLower === "pending";
+
+                    return (
+                      <div key={rowKey} className="ab-row">
+                        <div className="ab-id">
+                          {booking.bookingId || rowKey || "-"}
+                        </div>
+                        <div className="ab-name">{booking.name || "-"}</div>
+                        <div className="ab-phone">{booking.phone || "-"}</div>
+                        <div className="ab-purpose">{booking.purpose || "-"}</div>
+                        <div className="ab-amount">{formatCurrency(booking.amount)}</div>
+                        <div className="ab-amount">
+                          {formatCurrency(booking.advance ?? booking.paidAmount)}
+                        </div>
+                        <div className="ab-amount">
+                          {formatCurrency(booking.remainingAmount)}
+                        </div>
+                        <div className={`ab-status ${statusClass}`}>{status}</div>
+                        <div className="ab-date">
+                          {formatDate(booking.bookingDate || booking.date)}
+                        </div>
+                        <div>
+                          {showCancelBtn && (
+                            <button
+                              className="ab-cancel-btn"
+                              onClick={() =>
+                                setConfirmId(booking._id || booking.id)
+                              }
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* STICKY BOTTOM SCROLLBAR */}
+              <div
+                className="ab-sticky-scrollbar"
+                ref={scrollbarRef}
+                onScroll={handleScrollbarScroll}
+              >
+                <div className="ab-scrollbar-inner" />
+              </div>
+
+            </div>
+          )}
         </div>
       </div>
-    )}
-  </div>
-);
 
+      {/* CANCEL MODAL */}
+      {confirmId && (
+        <div className="ab-modal-overlay">
+          <div className="ab-modal">
+            <p>Enter cancellation reason</p>
+            <textarea
+              className="input"
+              rows="4"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter reason..."
+              style={{ marginTop: "10px", marginBottom: "15px" }}
+            />
+            <div className="ab-modal-actions">
+              <button className="primary-btn" onClick={confirmCancel}>
+                Confirm Cancel
+              </button>
+              <button
+                className="secondary-btn"
+                onClick={() => { setConfirmId(null); setCancelReason(""); }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default withAuth(AllBookings, [
-  "Admin",
-  "Entry Operator",
-  "Accountant",
-]);
+export default withAuth(AllBookings, ["Admin", "Entry Operator", "Accountant"]);

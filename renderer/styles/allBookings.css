@@ -1,5 +1,9 @@
-/* prevent whole page horizontal scroll */
-.main {
+/* ==========================================
+   MAIN
+========================================== */
+.db-main {
+  height: 100vh;
+  overflow-y: auto;
   overflow-x: hidden;
   max-width: 100%;
 }
@@ -7,12 +11,12 @@
 /* ==========================================
    SEARCH BOX
 ========================================== */
-.search-box {
+.ab-search-box {
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
-.search-box input {
+.ab-search-box input {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid #ddd;
@@ -23,7 +27,7 @@
   transition: 0.2s;
 }
 
-.search-box input:focus {
+.ab-search-box input:focus {
   border-color: #f97316;
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
@@ -31,14 +35,14 @@
 /* ==========================================
    BOOKING LIST
 ========================================== */
-.booking-list {
+.ab-booking-list {
   margin-top: 20px;
 }
 
 /* ==========================================
    EMPTY STATE
 ========================================== */
-.empty {
+.ab-empty {
   background: #fff;
   padding: 30px;
   border-radius: 16px;
@@ -48,28 +52,48 @@
 }
 
 /* ==========================================
-   TABLE CONTAINER — only this scrolls horizontally
+   OUTER CONTAINER — no overflow here
 ========================================== */
-.all-bookings-container {
+.ab-container {
   background: #ffffff;
-  padding: 25px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  overflow-x: auto;        /* only this box scrolls */
-  max-width: 100%;
 }
 
 /* ==========================================
-   INNER WRAPPER — holds header + rows at min width
+   STICKY HEADER WRAPPER
+   — sticks on vertical scroll
+   — hidden overflow so it scrolls with table via JS
 ========================================== */
-.all-bookings-inner {
-  min-width: 1500px;
+.ab-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  border-bottom: 2px solid #e5e7eb;
+  padding: 0 25px;
+  overflow: hidden;   /* clips content, JS syncs scroll */
 }
 
 /* ==========================================
-   TABLE HEADER
+   SCROLLABLE BODY — horizontal scroll here only
+   Native scrollbar hidden; sticky one used instead
 ========================================== */
-.all-bookings-header {
+.ab-table-scroll {
+  overflow-x: auto;
+  padding: 0 25px 10px;
+  scrollbar-width: none;        /* Firefox */
+}
+.ab-table-scroll::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari */
+}
+
+/* ==========================================
+   GRID — shared by header and rows
+========================================== */
+.ab-header,
+.ab-row {
   display: grid;
   grid-template-columns:
     130px   /* Booking ID */
@@ -82,66 +106,86 @@
     110px   /* Status */
     140px   /* Date */
     100px;  /* Action */
-
   gap: 20px;
   align-items: center;
-  padding: 0 10px 14px;
-  margin-bottom: 12px;
-  border-bottom: 2px solid #e5e7eb;
+  min-width: 1700px;
+}
 
+/* ==========================================
+   HEADER STYLES
+========================================== */
+.ab-header {
+  padding: 14px 0;
   font-size: 13px;
   font-weight: 700;
   color: #020202;
   text-transform: uppercase;
 }
 
+/* Invisible spacer — zero height, just forces min-width for scroll */
+.ab-header-spacer {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  padding: 10px !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
 /* ==========================================
-   TABLE ROW
+   ROW STYLES
 ========================================== */
-.all-bookings-row {
-  display: grid;
-  grid-template-columns:
-    130px   /* Booking ID */
-    180px   /* Name */
-    140px   /* Phone */
-    320px   /* Purpose */
-    130px   /* Total Amount */
-    130px   /* Paid Amount */
-    120px   /* Remaining */
-    110px   /* Status */
-    140px   /* Date */
-    100px;  /* Action */
+.ab-list {
+  min-width: 1700px;
+}
 
-  gap: 20px;
-  align-items: center;
-
+.ab-row {
   background: #ffffff;
   border: 1px solid #f0f0f0;
   border-radius: 14px;
-  padding: 18px 10px;
+  padding: 18px 0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   transition: 0.2s;
   margin-bottom: 10px;
 }
 
-.all-bookings-row:hover {
+.ab-row:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
-/* ==========================================
-   ALLOW GRID ITEMS TO SHRINK
-========================================== */
-.all-bookings-header > div,
-.all-bookings-row > div {
+.ab-header > div,
+.ab-row > div {
   min-width: 0;
+}
+
+/* ==========================================
+   STICKY BOTTOM SCROLLBAR
+   — sticks on vertical scroll
+   — synced to table scroll via JS
+========================================== */
+.ab-sticky-scrollbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #ffffff;
+  border-top: 1px solid #f0f0f0;
+  border-radius: 0 0 16px 16px;
+  padding: 4px 25px;
+}
+
+.ab-scrollbar-inner {
+  min-width: 1700px;
+  height: 1px;
 }
 
 /* ==========================================
    COLUMN STYLES
 ========================================== */
-.all-bookings-id,
-.all-bookings-name {
+.ab-id,
+.ab-name {
   font-size: 15px;
   font-weight: 600;
   color: #111827;
@@ -150,8 +194,12 @@
   white-space: nowrap;
 }
 
-.all-bookings-phone,
-.all-bookings-date {
+.ab-id {
+  padding-left: 20px;
+}
+
+.ab-phone,
+.ab-date {
   font-size: 14px;
   color: #374151;
   overflow: hidden;
@@ -159,7 +207,7 @@
   white-space: nowrap;
 }
 
-.all-bookings-purpose {
+.ab-purpose {
   font-size: 14px;
   color: #374151;
   line-height: 1.5;
@@ -168,14 +216,14 @@
   overflow-wrap: break-word;
 }
 
-.all-bookings-amount {
+.ab-amount {
   font-size: 15px;
   font-weight: 700;
   color: #059669;
   white-space: nowrap;
 }
 
-.all-bookings-status {
+.ab-status {
   font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
@@ -184,14 +232,14 @@
 /* ==========================================
    STATUS COLORS
 ========================================== */
-.status-approved { color: #16a34a; }
-.status-pending  { color: #d97706; }
-.status-cancelled { color: #dc2626; }
+.ab-status-approved  { color: #16a34a; }
+.ab-status-pending   { color: #d97706; }
+.ab-status-cancelled { color: #dc2626; }
 
 /* ==========================================
    CANCEL BUTTON
 ========================================== */
-.cancel-btn {
+.ab-cancel-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,15 +256,15 @@
   white-space: nowrap;
 }
 
-.cancel-btn:hover {
+.ab-cancel-btn:hover {
   background: #dc2626;
   color: #fff;
 }
 
 /* ==========================================
-   MODAL OVERLAY
+   MODAL
 ========================================== */
-.modal-overlay {
+.ab-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
@@ -226,10 +274,7 @@
   z-index: 999;
 }
 
-/* ==========================================
-   MODAL BOX
-========================================== */
-.modal {
+.ab-modal {
   width: 100%;
   max-width: 450px;
   background: #fff;
@@ -238,14 +283,14 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.modal p {
+.ab-modal p {
   margin: 0 0 12px;
   font-size: 16px;
   font-weight: 600;
   color: #111827;
 }
 
-.modal textarea {
+.ab-modal textarea {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid #ddd;
@@ -256,11 +301,11 @@
   outline: none;
 }
 
-.modal textarea:focus {
+.ab-modal textarea:focus {
   border-color: #f97316;
 }
 
-.modal-actions {
+.ab-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -271,23 +316,26 @@
    RESPONSIVE
 ========================================== */
 @media (max-width: 1200px) {
-  .all-bookings-header {
+  .ab-sticky-header,
+  .ab-header-spacer,
+  .ab-sticky-scrollbar {
     display: none;
   }
 
-  .all-bookings-inner {
-    min-width: unset;
-  }
-
-  .all-bookings-row {
+  .ab-row {
     grid-template-columns: 1fr;
+    min-width: unset;
     gap: 10px;
     padding: 18px 20px;
+  }
+
+  .ab-list {
+    min-width: unset;
   }
 }
 
 @media (max-width: 768px) {
-  .modal {
+  .ab-modal {
     margin: 20px;
     padding: 20px;
   }

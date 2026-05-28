@@ -28,3 +28,14 @@
     transform: translateY(0);
   }
 }
+
+   .utsav-calendar .react-datepicker__day--highlighted {
+     background-color: #f97316 !important;
+     color: #ffffff !important;
+     border-radius: 50%;
+   }
+
+   .utsav-calendar .react-datepicker__day--highlighted:hover {
+     background-color: #ea580c !important;
+   }
+   

@@ -1,18 +1,14 @@
-/* prevent whole page horizontal scroll — only table-wrapper scrolls */
+/* ==========================================
+   MAIN
+========================================== */
 .main {
   overflow-x: hidden;
   max-width: 100%;
 }
 
-/* ===== REPORTS PAGE ===== */
-.main {
-  overflow-x: hidden; /* prevent whole page from scrolling horizontally */
-  max-width: 100%;
-}
-
-/* ===== REPORTS PAGE ===== */
-
-/* ===== STATS ===== */
+/* ==========================================
+   STATS
+========================================== */
 .reports-stats {
   display: flex;
   gap: 20px;
@@ -39,7 +35,9 @@
   margin: 0;
 }
 
-/* ===== FILTER SECTION ===== */
+/* ==========================================
+   FILTER SECTION
+========================================== */
 .reports-filter {
   display: flex;
   flex-wrap: wrap;
@@ -52,7 +50,6 @@
   align-items: end;
 }
 
-/* ===== FILTER ITEMS ===== */
 .filter-left {
   display: flex;
   flex-direction: column;
@@ -67,7 +64,6 @@
   margin-bottom: 6px;
 }
 
-/* ===== INPUTS & SELECTS ===== */
 .reports-filter .input,
 .reports-filter select,
 .reports-filter input[type="date"] {
@@ -88,7 +84,6 @@
   box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
-/* ===== BUTTON ROW — sits below filters, full width ===== */
 .filter-btn-row {
   width: 100%;
   display: flex;
@@ -98,7 +93,6 @@
   margin-top: 6px;
 }
 
-/* ===== BUTTON BASE ===== */
 .apply-filter-btn,
 .download-report-btn {
   height: 42px;
@@ -121,7 +115,9 @@
   transform: translateY(-1px);
 }
 
-/* ===== TOTAL RECORDS ===== */
+/* ==========================================
+   TOTAL RECORDS
+========================================== */
 .reports-total {
   margin-top: 20px;
   font-weight: 600;
@@ -129,7 +125,9 @@
   font-size: 15px;
 }
 
-/* ===== CHART SECTION ===== */
+/* ==========================================
+   CHART SECTION
+========================================== */
 .reports-charts {
   display: flex;
   gap: 20px;
@@ -157,7 +155,9 @@
   line-height: 1.6;
 }
 
-/* ===== TABLE WRAPPER ===== */
+/* ==========================================
+   TABLE WRAPPER — horizontal scroll here
+========================================== */
 .table-wrapper {
   background: #ffffff;
   padding: 25px;
@@ -168,7 +168,9 @@
   max-width: 100%;
 }
 
-/* ===== REPORT TABLE ===== */
+/* ==========================================
+   REPORT TABLE
+========================================== */
 .report-table {
   width: 100%;
   min-width: 900px;
@@ -176,9 +178,17 @@
   border-spacing: 0 14px;
 }
 
-/* ===== TABLE HEADER ===== */
+/* ==========================================
+   TABLE HEADER — sticky to top of page
+========================================== */
+.report-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 .report-table thead th {
-  background: transparent;
+  background: #ffffff;
   color: #111827;
   font-size: 13px;
   font-weight: 700;
@@ -190,7 +200,9 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
-/* ===== TABLE ROWS ===== */
+/* ==========================================
+   TABLE ROWS
+========================================== */
 .report-table tbody tr {
   background: #ffffff;
   transition: all 0.2s ease;
@@ -200,7 +212,6 @@
   transform: translateY(-2px);
 }
 
-/* ===== TABLE CELLS ===== */
 .report-table tbody td {
   background: #ffffff;
   padding: 20px 18px;
@@ -252,12 +263,16 @@
 
 .report-table tbody td:nth-child(8) { font-weight: 700; }
 
-/* ===== STATUS COLORS ===== */
-.status-approved { color: #16a34a !important; }
-.status-pending  { color: #d97706 !important; }
+/* ==========================================
+   STATUS COLORS
+========================================== */
+.status-approved  { color: #16a34a !important; }
+.status-pending   { color: #d97706 !important; }
 .status-cancelled { color: #dc2626 !important; }
 
-/* ===== MOBILE ===== */
+/* ==========================================
+   MOBILE
+========================================== */
 @media (max-width: 768px) {
   .reports-stats  { flex-direction: column; }
   .reports-charts { flex-direction: column; }

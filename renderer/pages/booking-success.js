@@ -1,12 +1,26 @@
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
 export default function BookingSuccess() {
   const router = useRouter();
+  const [displayName, setDisplayName] = useState("");
 
-  const receiptId =
-    router.query.id || "Loading...";
+  const receiptId = router.query.id || "Loading...";
+
+  useEffect(() => {
+    const saved = JSON.parse(
+      localStorage.getItem("bookingForm") || "{}"
+    );
+
+    // If smarnarth is filled → show smarnarth, else show name
+    const name = saved.smarnarth?.trim()
+      ? saved.smarnarth.trim()
+      : saved.name?.trim() || "";
+
+    setDisplayName(name);
+  }, []);
 
   return (
     <div className="dashboard">
@@ -17,33 +31,31 @@ export default function BookingSuccess() {
 
         <div className="success-card">
           {/* Success Icon */}
-          <div className="success-icon">
-            ✔
-          </div>
+          <div className="success-icon">✔</div>
 
           {/* Title */}
           <h2 className="success-title">
-            <span>
-              Booking Confirmed!
-            </span>
-            <span>
-              बुकिंग पूर्ण!
-            </span>
+            <span>Booking Confirmed!</span>
+            <span>बुकिंग पूर्ण!</span>
           </h2>
 
           {/* Subtitle */}
           <p className="success-subtitle">
-            Your booking has been
-            successfully created.
+            Your booking has been successfully created.
           </p>
+
+          {/* Name — shows smarnarth if filled, else name */}
+          {displayName && (
+            <p className="receipt">
+              Name / नाव:<br />
+              <strong>{displayName}</strong>
+            </p>
+          )}
 
           {/* Receipt */}
           <p className="receipt">
-            Receipt:
-            <br />
-            <strong>
-              {receiptId}
-            </strong>
+            Receipt:<br />
+            <strong>{receiptId}</strong>
           </p>
 
           {/* Buttons */}

@@ -11,6 +11,8 @@ export default function TaxReceipt() {
 
   const [is80G, setIs80G] = useState(false);
   const [selectedBank, setSelectedBank] = useState("");
+  const [panCard, setPanCard] = useState("");
+  const [cashAmount, setCashAmount] = useState(""); // new cash amount field
   const [loading, setLoading] = useState(false);
 
   const banks = is80G
@@ -26,33 +28,26 @@ export default function TaxReceipt() {
     "shiraprasad",
   ];
 
-  /* ======================================================
-     NORMALIZE PURPOSE
-  ====================================================== */
-  const normalizePurpose = (purpose = "") => {
-    return String(purpose).split("/")[0].trim().toLowerCase();
-  };
+  const normalizePurpose = (purpose = "") =>
+    String(purpose).split("/")[0].trim().toLowerCase();
 
   /* ======================================================
-     VALIDATION FUNCTIONS
+     VALIDATION
   ====================================================== */
-  const validateName = (name) => {
-    const regex = /^[A-Za-z\s]+$/;
-    return regex.test(name.trim());
-  };
+  const validateName = (name) => /^[A-Za-z\s]+$/.test(name.trim());
 
   const validatePhone = (phone) => {
     const cleaned = phone.trim();
-    const validFormat = /^[6-9]\d{9}$/.test(cleaned);
-    const allSameDigits = /^(\d)\1{9}$/.test(cleaned);
-    return validFormat && !allSameDigits;
+    return /^[6-9]\d{9}$/.test(cleaned) && !/^(\d)\1{9}$/.test(cleaned);
   };
 
   const validateEmail = (email) => {
     if (!email?.trim()) return true;
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email.trim().toLowerCase());
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
   };
+
+  const validatePanCard = (pan) =>
+    /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.trim().toUpperCase());
 
   /* ======================================================
      CREATE TAX BOOKING
@@ -65,51 +60,23 @@ export default function TaxReceipt() {
         localStorage.getItem("bookingForm") || "{}"
       );
 
-      /* BASIC VALIDATION */
-      if (!savedForm.name?.trim()) {
-        alert("Please enter devotee name");
-        return;
-      }
-
-      if (!validateName(savedForm.name)) {
-        alert("Name should contain only letters and spaces.");
-        return;
-      }
-
-      if (!savedForm.phone?.trim()) {
-        alert("Please enter phone number");
-        return;
-      }
-
-      if (!validatePhone(savedForm.phone)) {
-        alert(
-          "Enter a valid 10-digit mobile number. Repeated numbers like 1111111111 are not allowed."
-        );
-        return;
-      }
-
-      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-
-      if (!savedForm.purpose?.trim()) {
-        alert("Please select purpose");
-        return;
-      }
+      if (!savedForm.name?.trim()) { alert("Please enter devotee name"); return; }
+      if (!validateName(savedForm.name)) { alert("Name should contain only letters and spaces."); return; }
+      if (!savedForm.phone?.trim()) { alert("Please enter phone number"); return; }
+      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
+      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
+      if (!savedForm.purpose?.trim()) { alert("Please select purpose"); return; }
 
       const bookingDate = new Date(savedForm.bookingDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
 
-      if (bookingDate < today) {
-        alert("Past dates are not allowed.");
-        return;
-      }
+      if (!selectedBank) { alert("Please select bank"); return; }
 
-      if (!selectedBank) {
-        alert("Please select bank");
-        return;
+      if (is80G) {
+        if (!panCard.trim()) { alert("Please enter PAN card number for 80G"); return; }
+        if (!validatePanCard(panCard)) { alert("Please enter a valid PAN card number (e.g. ABCDE1234F)"); return; }
       }
 
       /* FINANCIAL VALUES */
@@ -117,28 +84,12 @@ export default function TaxReceipt() {
       let advance = Number(savedForm.advance || 0);
       let remainingAmount = Number(savedForm.remainingAmount || 0);
 
-      if (Number.isNaN(amount) || amount <= 0) {
-        alert("Amount must be greater than 0");
-        return;
-      }
+      if (Number.isNaN(amount) || amount <= 0) { alert("Amount must be greater than 0"); return; }
 
-      if (Number.isNaN(advance) || advance < 0) {
-        alert("Advance amount cannot be negative");
-        return;
-      }
-
-      if (Number.isNaN(remainingAmount) || remainingAmount < 0) {
-        alert("Remaining amount cannot be negative");
-        return;
-      }
-
-      /* PURPOSE LOGIC */
       const normalizedPurpose = normalizePurpose(savedForm.purpose);
       const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
 
-      /* STATUS LOGIC */
       let status = "Approved";
-
       if (isAdvanceAllowed) {
         status = remainingAmount > 0 ? "Pending" : "Approved";
       } else {
@@ -147,7 +98,6 @@ export default function TaxReceipt() {
         status = "Approved";
       }
 
-      /* PAYMENT TYPE */
       const paymentType =
         savedForm.paymentType ||
         (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
@@ -174,13 +124,14 @@ export default function TaxReceipt() {
           receiptType: "Tax",
           bank: selectedBank,
           is80G,
+          panCard: is80G ? panCard.trim().toUpperCase() : "",
+          cashAmount: cashAmount ? Number(cashAmount) : 0, // send cash amount
           reason: savedForm.reason || "",
         }),
       });
 
       console.log("CREATE TAX BOOKING RESPONSE:", response);
 
-      /* GET GENERATED BOOKING ID */
       const receiptId =
         response?.booking?.bookingId ||
         response?.booking?.receiptId ||
@@ -188,16 +139,12 @@ export default function TaxReceipt() {
         response?.receiptId ||
         "BOOKING";
 
-      /* SAVE FOR PRINT */
       localStorage.setItem("lastBooking", JSON.stringify({
         ...(response?.booking || {}),
         bookingId: receiptId,
       }));
 
-      /* CLEAR TEMP DATA */
       localStorage.removeItem("bookingForm");
-
-      /* REDIRECT TO SUCCESS PAGE */
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
     } catch (err) {
       console.error("Tax booking error:", err);
@@ -219,10 +166,10 @@ export default function TaxReceipt() {
 
         <p className="tr-step-text">Step 2 of 2</p>
 
-        {/* Payment Details */}
         <div className="db-section tr-section">
           <h3>Payment Details / पेमेंट तपशील</h3>
 
+          {/* 80G Checkbox */}
           <label className="tr-checkbox">
             <input
               type="checkbox"
@@ -230,15 +177,15 @@ export default function TaxReceipt() {
               onChange={() => {
                 const next80G = !is80G;
                 setIs80G(next80G);
-                if (!next80G && selectedBank === "SBI Bank") {
-                  setSelectedBank("");
-                }
+                if (!next80G && selectedBank === "SBI Bank") setSelectedBank("");
+                if (!next80G) setPanCard("");
               }}
             />
             <span className="tr-checkmark"></span>
             80G Applicable
           </label>
 
+          {/* Bank Dropdown */}
           <div style={{ marginTop: "10px" }}>
             <label className="tr-bank-label">Bank / बँक</label>
             <select
@@ -248,12 +195,43 @@ export default function TaxReceipt() {
             >
               <option value="">Select Bank</option>
               {banks.map((bank, index) => (
-                <option key={index} value={bank}>
-                  {bank}
-                </option>
+                <option key={index} value={bank}>{bank}</option>
               ))}
             </select>
           </div>
+
+          {/* Cash Amount — not required, for offline cash bookings */}
+          <div style={{ marginTop: "10px" }}>
+            <label className="tr-bank-label">
+              Cash Amount / रोख रक्कम
+            </label>
+            <input
+              type="number"
+              className="input"
+              placeholder="Enter cash amount (optional) / रोख रक्कम टाका"
+              min="1"
+              value={cashAmount}
+              onChange={(e) => setCashAmount(e.target.value)}
+            />
+          </div>
+
+          {/* PAN Card — only when 80G is checked */}
+          {is80G && (
+            <div style={{ marginTop: "10px" }}>
+              <label className="tr-bank-label">
+                PAN Card Number / पॅन कार्ड नंबर *
+              </label>
+              <input
+                className="input"
+                placeholder="e.g. ABCDE1234F"
+                value={panCard}
+                maxLength={10}
+                onChange={(e) =>
+                  setPanCard(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                }
+              />
+            </div>
+          )}
         </div>
 
         {/* Devotee Form */}
