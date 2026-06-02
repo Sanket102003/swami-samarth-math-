@@ -1,27 +1,343 @@
-/* ===== SETTINGS CARD ===== */
+/* ==========================================
+   SETTINGS CARD
+========================================== */
 .settings-card {
-  max-width: 600px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  max-width: 680px;
+  margin-top: 20px;
+  border: 1px solid #f0f0f0;
 }
 
-/* ===== TOAST MESSAGE ===== */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #111;
+/* ==========================================
+   CARD HEADER
+========================================== */
+.settings-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.settings-card-icon {
+  font-size: 28px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.settings-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.settings-card-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ==========================================
+   FIELDS
+========================================== */
+.settings-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.settings-field {
+  margin-bottom: 16px;
+}
+
+.settings-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.settings-label-hint {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #111827;
+  background: #fafafa;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.settings-input:focus {
+  border-color: #f97316;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* ==========================================
+   SAVE BUTTON
+========================================== */
+.settings-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 28px;
+  background: #f97316;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.settings-save-btn:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================
+   HINT TEXT
+========================================== */
+.settings-hint {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 8px 0 0;
+}
+
+/* ==========================================
+   CALENDAR WRAP
+========================================== */
+.utsav-calendar-wrap {
+  display: inline-block;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.utsav-calendar .react-datepicker {
+  border: none;
+  font-family: inherit;
+}
+
+.utsav-calendar .react-datepicker__header {
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+}
+
+.utsav-calendar .react-datepicker__current-month {
+  color: #c2410c;
+  font-weight: 700;
+}
+
+.utsav-calendar .react-datepicker__day--highlighted {
+  background-color: #f97316 !important;
+  color: #ffffff !important;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.utsav-calendar .react-datepicker__day--highlighted:hover {
+  background-color: #ea580c !important;
+}
+
+.utsav-calendar .react-datepicker__day:hover {
+  background-color: #fff7ed;
+  border-radius: 50%;
+}
+
+.utsav-calendar .react-datepicker__day--today {
+  font-weight: 700;
+  color: #f97316;
+}
+
+/* ==========================================
+   DATE TAGS
+========================================== */
+.utsav-date-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.utsav-date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ed;
+  border: 1.5px solid #f97316;
+  color: #c2410c;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.utsav-date-tag-remove {
+  background: none;
+  border: none;
+  color: #f97316;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.utsav-date-tag-remove:hover {
+  color: #dc2626;
+}
+
+/* ==========================================
+   UTSAV LIST SECTION
+========================================== */
+.utsav-list-section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.utsav-list-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 16px;
+}
+
+.utsav-empty {
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.utsav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.utsav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: 0.2s;
+}
+
+.utsav-item:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.08);
+}
+
+.utsav-item-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.utsav-item-icon {
+  font-size: 22px;
+  margin-top: 2px;
+}
+
+.utsav-item-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px;
+  text-transform: capitalize;
+}
+
+.utsav-item-dates {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.utsav-delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.utsav-delete-btn:hover {
+  background: #dc2626;
   color: #fff;
-  padding: 12px 18px;
+}
+
+/* ==========================================
+   TOAST
+========================================== */
+.settings-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 20px;
   border-radius: 12px;
   font-size: 14px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-  animation: fadeIn 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: toastIn 0.3s ease;
+  z-index: 9999;
 }
 
-/* OPTIONAL ANIMATION */
-@keyframes fadeIn {
+.settings-toast-success {
+  background: #111827;
+  color: #ffffff;
+}
+
+@keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -29,13 +345,19 @@
   }
 }
 
-   .utsav-calendar .react-datepicker__day--highlighted {
-     background-color: #f97316 !important;
-     color: #ffffff !important;
-     border-radius: 50%;
-   }
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 768px) {
+  .settings-fields {
+    grid-template-columns: 1fr;
+  }
 
-   .utsav-calendar .react-datepicker__day--highlighted:hover {
-     background-color: #ea580c !important;
-   }
-   
+  .settings-card {
+    padding: 20px;
+  }
+
+  .utsav-item-dates {
+    max-width: 200px;
+  }
+}

@@ -10,128 +10,70 @@ export default function InternalReceipt() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  /* ======================================================
-     PURPOSES THAT SUPPORT ADVANCE PAYMENT
-  ====================================================== */
-  const ADVANCE_ALLOWED_PURPOSES = [
-    "full bhandara",
-    "half bhandara",
-    "shiraprasad",
-  ];
+  const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
 
-  /* ======================================================
-     NORMALIZE PURPOSE
-  ====================================================== */
-  const normalizePurpose = (purpose = "") => {
-    return String(purpose).split("/")[0].trim().toLowerCase();
-  };
+  const normalizePurpose = (purpose = "") =>
+    String(purpose).split("/")[0].trim().toLowerCase();
 
-  /* ======================================================
-     VALIDATION FUNCTIONS
-  ====================================================== */
-
-  // Name: only letters and spaces
-  const validateName = (name) => {
-    const regex = /^[A-Za-z\s]+$/;
-    return regex.test(name.trim());
-  };
-
-  // Phone: exactly 10 digits, starts with 6-9, no repeated digits
+  const validateName = (name) => /^[A-Za-z\s]+$/.test(name.trim());
   const validatePhone = (phone) => {
-    const cleaned = phone.trim();
-    const validFormat = /^[6-9]\d{9}$/.test(cleaned);
-    const allSameDigits = /^(\d)\1{9}$/.test(cleaned);
-    return validFormat && !allSameDigits;
+    const c = phone.trim();
+    return /^[6-9]\d{9}$/.test(c) && !/^(\d)\1{9}$/.test(c);
   };
-
-  // Email validation (optional field)
   const validateEmail = (email) => {
     if (!email?.trim()) return true;
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email.trim().toLowerCase());
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
   };
 
-  /* ======================================================
-     CREATE BOOKING
-  ====================================================== */
   const handleCreateBooking = async () => {
     try {
       setLoading(true);
+      const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
 
-      /* LOAD SAVED FORM */
-      const savedForm = JSON.parse(
-        localStorage.getItem("bookingForm") || "{}"
-      );
+      if (!savedForm.name?.trim()) { alert("Please enter devotee name"); return; }
+      if (!validateName(savedForm.name)) { alert("Name should contain only letters and spaces."); return; }
+      if (!savedForm.phone?.trim()) { alert("Please enter phone number"); return; }
+      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
+      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
+      if (!savedForm.purpose?.trim()) { alert("Please select purpose"); return; }
 
-      /* BASIC VALIDATION */
-      if (!savedForm.name?.trim()) {
-        alert("Please enter devotee name");
-        return;
-      }
+      const noCalendarPurposes = [
+        "Two Wheeler / दुचाकी (₹251)",
+        "Three Wheeler / तीनचाकी (₹351)",
+        "Four Wheeler / चारचाकी (₹551)",
+        "गाडीपुजा (टे पो, बस इयादी.)",
+      ];
 
-      if (!validateName(savedForm.name)) {
-        alert("Name should contain only letters and spaces.");
-        return;
-      }
-
-      if (!savedForm.phone?.trim()) {
-        alert("Please enter phone number");
-        return;
-      }
-
-      if (!validatePhone(savedForm.phone)) {
-        alert(
-          "Enter a valid 10-digit mobile number. Repeated numbers like 1111111111 are not allowed."
-        );
-        return;
-      }
-
-      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-
-      if (!savedForm.purpose?.trim()) {
-        alert("Please select purpose");
+      if (savedForm.purpose === "Abhishek / अभिषेक") {
+        if (!savedForm.abhishekType?.trim()) { alert("Please select Abhishek type"); return; }
+        if (!savedForm.abhishekGotra?.trim()) { alert("Please select or enter Gotra"); return; }
+        if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { alert("Please enter price per date"); return; }
+        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) {
+          alert("Please select at least one date for Abhishek");
+          return;
+        }
+      } else if (!noCalendarPurposes.includes(savedForm.purpose) &&
+                 savedForm.purpose !== "Abhishek / अभिषेक" &&
+                 !savedForm.bookingDate) {
+        alert("Please select booking date");
         return;
       }
 
       const bookingDate = new Date(savedForm.bookingDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
 
-      if (bookingDate < today) {
-        alert("Past dates are not allowed.");
-        return;
-      }
-
-      /* FINANCIAL VALUES */
       const amount = Number(savedForm.amount || 0);
       let advance = Number(savedForm.advance || 0);
       let remainingAmount = Number(savedForm.remainingAmount || 0);
 
-      if (Number.isNaN(amount) || amount <= 0) {
-        alert("Amount must be greater than 0");
-        return;
-      }
+      if (Number.isNaN(amount) || amount <= 0) { alert("Amount must be greater than 0"); return; }
 
-      if (Number.isNaN(advance) || advance < 0) {
-        alert("Advance amount cannot be negative");
-        return;
-      }
-
-      if (Number.isNaN(remainingAmount) || remainingAmount < 0) {
-        alert("Remaining amount cannot be negative");
-        return;
-      }
-
-      /* PURPOSE LOGIC */
       const normalizedPurpose = normalizePurpose(savedForm.purpose);
       const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
 
-      /* STATUS LOGIC */
       let status = "Approved";
-
       if (isAdvanceAllowed) {
         status = remainingAmount > 0 ? "Pending" : "Approved";
       } else {
@@ -140,12 +82,8 @@ export default function InternalReceipt() {
         status = "Approved";
       }
 
-      /* PAYMENT TYPE */
-      const paymentType =
-        savedForm.paymentType ||
-        (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
+      const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
 
-      /* CREATE BOOKING API */
       const response = await apiRequest("/create_booking", {
         method: "POST",
         body: JSON.stringify({
@@ -158,37 +96,16 @@ export default function InternalReceipt() {
           address: savedForm.address?.trim() || "",
           purpose: savedForm.purpose || "",
           bookingDate: savedForm.bookingDate,
-          amount,
-          advance,
-          paidAmount: advance,
-          remainingAmount,
-          paymentType,
-          status,
+          amount, advance, paidAmount: advance, remainingAmount,
+          paymentType, status,
           receiptType: "Internal",
           reason: savedForm.reason || "",
         }),
       });
 
-      console.log("CREATE BOOKING RESPONSE:", response);
-
-      /* GET GENERATED BOOKING ID */
-      const receiptId =
-        response?.booking?.bookingId ||
-        response?.booking?.receiptId ||
-        response?.bookingId ||
-        response?.receiptId ||
-        "BOOKING";
-
-      /* SAVE FOR PRINT */
-      localStorage.setItem("lastBooking", JSON.stringify({
-        ...(response?.booking || {}),
-        bookingId: receiptId,
-      }));
-
-      /* CLEAR TEMP STORAGE */
+      const receiptId = response?.booking?.bookingId || response?.booking?.receiptId || response?.bookingId || "BOOKING";
+      localStorage.setItem("lastBooking", JSON.stringify({ ...(response?.booking || {}), bookingId: receiptId }));
       localStorage.removeItem("bookingForm");
-
-      /* REDIRECT TO SUCCESS PAGE */
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
     } catch (err) {
       console.error("Create booking error:", err);
@@ -198,9 +115,6 @@ export default function InternalReceipt() {
     }
   };
 
-  /* ======================================================
-     UI
-  ====================================================== */
   return (
     <div className="db-dashboard">
       <Sidebar />
@@ -208,19 +122,53 @@ export default function InternalReceipt() {
       <div className="db-main ir-internal-page">
         <Header title="Internal Receipt / अंतर्गत पावती" />
 
-        <p className="ir-step-text">Step 2 of 2</p>
-
-        {/* Devotee Details */}
-        <div className="db-section ir-internal-section">
-          <DevoteeForm />
+        {/* STEP INDICATOR */}
+        <div className="ir-step-bar">
+          <div className="ir-step ir-step-done">
+            <div className="ir-step-num">✓</div>
+            <span>Receipt Type</span>
+          </div>
+          <div className="ir-step-line" />
+          <div className="ir-step ir-step-active">
+            <div className="ir-step-num">2</div>
+            <span>Booking Details</span>
+          </div>
         </div>
 
-        {/* Purpose Details */}
-        <div className="db-section ir-internal-section">
-          <PurposeDropdown />
+        {/* RECEIPT BADGE */}
+        <div className="ir-receipt-badge">
+          🧾 Internal Receipt / अंतर्गत पावती (Cash)
         </div>
 
-        {/* Action Buttons */}
+        {/* DEVOTEE DETAILS CARD */}
+        <div className="ir-card">
+          <div className="ir-card-header">
+            <div className="ir-card-icon">👤</div>
+            <div>
+              <p className="ir-card-title">Devotee Details / भक्त तपशील</p>
+              <p className="ir-card-subtitle">Enter the devotee's personal information</p>
+            </div>
+          </div>
+          <div className="ir-card-body">
+            <DevoteeForm />
+          </div>
+        </div>
+
+        {/* PURPOSE & BOOKING DETAILS CARD */}
+        <div className="ir-card">
+          <div className="ir-card-header">
+            <div className="ir-card-icon">📋</div>
+            <div>
+              <p className="ir-card-title">Purpose & Date / उद्देश आणि तारीख</p>
+              <p className="ir-card-subtitle">Select purpose, payment type and booking date</p>
+            </div>
+          </div>
+          <div className="ir-card-body">
+            <PurposeDropdown />
+          </div>
+        </div>
+
+        {/* ACTION BUTTONS */}
         <div className="ir-internal-actions">
           <button
             className="secondary-btn"
@@ -229,7 +177,6 @@ export default function InternalReceipt() {
           >
             ← Back / मागे
           </button>
-
           <button
             className="primary-btn"
             onClick={handleCreateBooking}

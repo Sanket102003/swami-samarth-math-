@@ -1,6 +1,422 @@
 /* ===== TAX RECEIPT PAGE ===== */
 
-/* ===== 80G CHECKBOX ===== */
+.tr-step-text {
+  margin-top: 5px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.tr-section {
+  margin-top: 16px;
+}
+
+/* STEP INDICATOR — reuse ir- classes or define tr- */
+.tr-step-bar {
+  display: flex;
+  align-items: center;
+  margin: 20px 0 28px;
+}
+
+.tr-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.tr-step.tr-step-done .tr-step-num {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+
+.tr-step.tr-step-active .tr-step-num {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+}
+
+.tr-step.tr-step-active { color: #f97316; }
+
+.tr-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.tr-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 10px;
+  max-width: 50px;
+}
+
+/* RECEIPT BADGE */
+.tr-receipt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  color: #3b82f6;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* SECTION CARD */
+.tr-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.tr-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.tr-card-icon {
+  width: 36px;
+  height: 36px;
+  background: #eff6ff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.tr-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.tr-card-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 2px 0 0;
+}
+
+.tr-card-body {
+  padding: 20px 24px;
+}
+
+/* PAYMENT DETAILS GRID */
+.tr-payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.tr-full-width {
+  grid-column: 1 / -1;
+}
+
+/* FIELD */
+.tr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tr-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tr-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
+  color: #111827;
+  font-family: inherit;
+}
+
+.tr-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08);
+}
+
+.tr-input::placeholder { color: #d1d5db; }
+
+/* 80G CHECKBOX — modern toggle style */
+.tr-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 14px;
+}
+
+.tr-toggle-row:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.tr-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tr-toggle-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tr-toggle-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Toggle switch */
+.tr-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.tr-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.tr-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 24px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.tr-toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  left: 3px;
+  top: 3px;
+  transition: 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.tr-toggle input:checked + .tr-toggle-slider {
+  background: #f97316;
+}
+
+.tr-toggle input:checked + .tr-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* BANK OPTIONS — pill buttons */
+.tr-bank-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.tr-bank-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.tr-bank-pill:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.tr-bank-pill.tr-bank-active {
+  border-color: #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+}
+
+.tr-bank-pill.tr-cash-pill:hover,
+.tr-bank-pill.tr-cash-pill.tr-bank-active {
+  border-color: #22c55e;
+  background: #22c55e;
+  color: #fff;
+}
+
+.tr-bank-icon {
+  font-size: 16px;
+}
+
+/* CASH AMOUNT INPUT BOX */
+.tr-cash-box {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tr-cash-box-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tr-cash-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #86efac;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.tr-cash-input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+}
+
+/* PAN CARD BOX */
+.tr-pan-box {
+  background: #fefce8;
+  border: 1.5px solid #fde047;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tr-pan-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #854d0e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tr-pan-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #fde047;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font-family: inherit;
+  transition: 0.2s;
+  text-transform: uppercase;
+}
+
+.tr-pan-input:focus {
+  border-color: #eab308;
+  box-shadow: 0 0 0 3px rgba(234,179,8,0.1);
+}
+
+/* BANK LABEL (legacy) */
+.tr-bank-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ACTION BUTTONS */
+.tr-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.tr-actions .secondary-btn,
+.tr-actions .primary-btn {
+  flex: 1;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* CHECKBOX (legacy) */
 .tr-checkbox {
   display: flex;
   align-items: center;
@@ -9,9 +425,7 @@
   margin-bottom: 15px;
 }
 
-.tr-checkbox input {
-  display: none;
-}
+.tr-checkbox input { display: none; }
 
 .tr-checkmark {
   width: 18px;
@@ -22,7 +436,6 @@
   transition: 0.2s;
 }
 
-/* CHECKED STATE */
 .tr-checkbox input:checked + .tr-checkmark {
   background: #f97316;
   border-color: #f97316;
@@ -35,47 +448,4 @@
   font-size: 12px;
   left: 2px;
   top: -1px;
-}
-
-/* ===== PAYMENT BOX ===== */
-.tr-payment-box {
-  background: #fff7ed;
-  border: 1px solid #f97316;
-  padding: 15px;
-  border-radius: 12px;
-  margin-top: 10px;
-}
-
-/* ===== SECTION SPACING ===== */
-.tr-section {
-  margin-top: 20px;
-}
-
-/* ===== STEP TEXT ===== */
-.tr-step-text {
-  margin-top: 5px;
-  color: #777;
-  font-size: 13px;
-}
-
-/* ===== BANK LABEL ===== */
-.tr-bank-label {
-  font-size: 14px;
-  font-weight: 500;
-  margin-top: 10px;
-  display: block;
-}
-
-/* ===== ACTION BUTTONS ===== */
-.tr-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-  width: 100%;
-  align-items: stretch;
-}
-
-.tr-actions .secondary-btn,
-.tr-actions .primary-btn {
-  flex: 1;
 }

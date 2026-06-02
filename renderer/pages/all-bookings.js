@@ -222,11 +222,10 @@ function AllBookings() {
                       ? "ab-status-cancelled"
                       : "ab-status-pending";
 
-                    // FIX: Show Cancel button only for Pending bookings
-                    // Approved and Cancelled bookings do NOT show Cancel button
+                    // Show Cancel button for all non-cancelled bookings
                     const showCancelBtn =
                       userRole === "Admin" &&
-                      statusLower === "pending";
+                      statusLower !== "cancelled";
 
                     return (
                       <div key={rowKey} className="ab-row">

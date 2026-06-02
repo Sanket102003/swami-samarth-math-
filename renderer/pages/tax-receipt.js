@@ -6,80 +6,87 @@ import DevoteeForm from "../components/DevoteeForm";
 import PurposeDropdown from "../components/PurposeDropdown";
 import apiRequest from "../services/api";
 
+/* Bank options with icons */
+const ALL_BANKS = [
+  { id: "ICICI Bank", label: "ICICI", icon: "🏦" },
+  { id: "BCCB Bank", label: "BCCB",  icon: "🏛️" },
+  { id: "SBI Bank",  label: "SBI",   icon: "🏧" },
+  { id: "Cash",      label: "Cash",  icon: "💵", isCash: true },
+];
+
 export default function TaxReceipt() {
   const router = useRouter();
 
   const [is80G, setIs80G] = useState(false);
   const [selectedBank, setSelectedBank] = useState("");
   const [panCard, setPanCard] = useState("");
-  const [cashAmount, setCashAmount] = useState(""); // new cash amount field
+  const [cashAmount, setCashAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const banks = is80G
-    ? ["ICICI Bank", "CDB Bank", "SBI Bank"]
-    : ["ICICI Bank", "CDB Bank"];
+  /* Banks shown: all 4 always visible; SBI only when 80G */
+  const visibleBanks = is80G
+    ? ALL_BANKS
+    : ALL_BANKS.filter((b) => b.id !== "SBI Bank");
 
-  /* ======================================================
-     PURPOSES THAT SUPPORT ADVANCE PAYMENT
-  ====================================================== */
-  const ADVANCE_ALLOWED_PURPOSES = [
-    "full bhandara",
-    "half bhandara",
-    "shiraprasad",
-  ];
+  const isCashSelected = selectedBank === "Cash";
 
-  const normalizePurpose = (purpose = "") =>
-    String(purpose).split("/")[0].trim().toLowerCase();
+  const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
+  const normalizePurpose = (p = "") => String(p).split("/")[0].trim().toLowerCase();
 
-  /* ======================================================
-     VALIDATION
-  ====================================================== */
-  const validateName = (name) => /^[A-Za-z\s]+$/.test(name.trim());
+  const validateName  = (n) => /^[A-Za-z\s]+$/.test(n.trim());
+  const validatePhone = (p) => { const c = p.trim(); return /^[6-9]\d{9}$/.test(c) && !/^(\d)\1{9}$/.test(c); };
+  const validateEmail = (e) => { if (!e?.trim()) return true; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); };
+  const validatePan   = (p) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(p.trim().toUpperCase());
 
-  const validatePhone = (phone) => {
-    const cleaned = phone.trim();
-    return /^[6-9]\d{9}$/.test(cleaned) && !/^(\d)\1{9}$/.test(cleaned);
-  };
-
-  const validateEmail = (email) => {
-    if (!email?.trim()) return true;
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
-  };
-
-  const validatePanCard = (pan) =>
-    /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.trim().toUpperCase());
-
-  /* ======================================================
-     CREATE TAX BOOKING
-  ====================================================== */
   const handleCreateBooking = async () => {
     try {
       setLoading(true);
+      const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
 
-      const savedForm = JSON.parse(
-        localStorage.getItem("bookingForm") || "{}"
-      );
-
-      if (!savedForm.name?.trim()) { alert("Please enter devotee name"); return; }
-      if (!validateName(savedForm.name)) { alert("Name should contain only letters and spaces."); return; }
-      if (!savedForm.phone?.trim()) { alert("Please enter phone number"); return; }
-      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
+      if (!savedForm.name?.trim())          { alert("Please enter devotee name"); return; }
+      if (!validateName(savedForm.name))    { alert("Name should contain only letters and spaces."); return; }
+      if (!savedForm.phone?.trim())         { alert("Please enter phone number"); return; }
+      if (!validatePhone(savedForm.phone))  { alert("Enter a valid 10-digit mobile number."); return; }
       if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
-      if (!savedForm.purpose?.trim()) { alert("Please select purpose"); return; }
+      if (!savedForm.purpose?.trim())       { alert("Please select purpose"); return; }
 
-      const bookingDate = new Date(savedForm.bookingDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
+      const noCalendarPurposes = [
+        "Two Wheeler / दुचाकी (₹251)",
+        "Three Wheeler / तीनचाकी (₹351)",
+        "Four Wheeler / चारचाकी (₹551)",
+        "गाडीपुजा (टे पो, बस इयादी.)",
+      ];
 
-      if (!selectedBank) { alert("Please select bank"); return; }
-
-      if (is80G) {
-        if (!panCard.trim()) { alert("Please enter PAN card number for 80G"); return; }
-        if (!validatePanCard(panCard)) { alert("Please enter a valid PAN card number (e.g. ABCDE1234F)"); return; }
+      if (savedForm.purpose === "Abhishek / अभिषेक") {
+        if (!savedForm.abhishekType?.trim()) { alert("Please select Abhishek type"); return; }
+        if (!savedForm.abhishekGotra?.trim()) { alert("Please select or enter Gotra"); return; }
+        if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { alert("Please enter price per date"); return; }
+        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) {
+          alert("Please select at least one date for Abhishek");
+          return;
+        }
+      } else if (!noCalendarPurposes.includes(savedForm.purpose) &&
+                 savedForm.purpose !== "Abhishek / अभिषेक" &&
+                 !savedForm.bookingDate) {
+        alert("Please select booking date");
+        return;
       }
 
-      /* FINANCIAL VALUES */
+      const bookingDate = new Date(savedForm.bookingDate);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
+
+      if (!selectedBank) { alert("Please select a payment method"); return; }
+
+      if (isCashSelected && (!cashAmount || Number(cashAmount) <= 0)) {
+        alert("Please enter cash amount"); return;
+      }
+
+      if (is80G) {
+        if (!panCard.trim())         { alert("Please enter PAN card number for 80G"); return; }
+        if (!validatePan(panCard))   { alert("Please enter a valid PAN card (e.g. ABCDE1234F)"); return; }
+      }
+
       const amount = Number(savedForm.amount || 0);
       let advance = Number(savedForm.advance || 0);
       let remainingAmount = Number(savedForm.remainingAmount || 0);
@@ -93,16 +100,11 @@ export default function TaxReceipt() {
       if (isAdvanceAllowed) {
         status = remainingAmount > 0 ? "Pending" : "Approved";
       } else {
-        advance = amount;
-        remainingAmount = 0;
-        status = "Approved";
+        advance = amount; remainingAmount = 0; status = "Approved";
       }
 
-      const paymentType =
-        savedForm.paymentType ||
-        (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
+      const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
 
-      /* API CALL */
       const response = await apiRequest("/create_booking", {
         method: "POST",
         body: JSON.stringify({
@@ -115,35 +117,19 @@ export default function TaxReceipt() {
           address: savedForm.address?.trim() || "",
           purpose: savedForm.purpose || "",
           bookingDate: savedForm.bookingDate,
-          amount,
-          advance,
-          paidAmount: advance,
-          remainingAmount,
-          paymentType,
-          status,
+          amount, advance, paidAmount: advance, remainingAmount,
+          paymentType, status,
           receiptType: "Tax",
-          bank: selectedBank,
+          bank: isCashSelected ? "Cash" : selectedBank,
           is80G,
           panCard: is80G ? panCard.trim().toUpperCase() : "",
-          cashAmount: cashAmount ? Number(cashAmount) : 0, // send cash amount
+          cashAmount: isCashSelected ? Number(cashAmount) : 0,
           reason: savedForm.reason || "",
         }),
       });
 
-      console.log("CREATE TAX BOOKING RESPONSE:", response);
-
-      const receiptId =
-        response?.booking?.bookingId ||
-        response?.booking?.receiptId ||
-        response?.bookingId ||
-        response?.receiptId ||
-        "BOOKING";
-
-      localStorage.setItem("lastBooking", JSON.stringify({
-        ...(response?.booking || {}),
-        bookingId: receiptId,
-      }));
-
+      const receiptId = response?.booking?.bookingId || response?.booking?.receiptId || response?.bookingId || "BOOKING";
+      localStorage.setItem("lastBooking", JSON.stringify({ ...(response?.booking || {}), bookingId: receiptId }));
       localStorage.removeItem("bookingForm");
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
     } catch (err) {
@@ -154,93 +140,147 @@ export default function TaxReceipt() {
     }
   };
 
-  /* ======================================================
-     UI
-  ====================================================== */
   return (
     <div className="db-dashboard">
       <Sidebar />
 
-      <div className="db-main">
+      <div className="db-main ir-internal-page">
         <Header title="Income Tax Receipt / आयकर पावती" />
 
-        <p className="tr-step-text">Step 2 of 2</p>
-
-        <div className="db-section tr-section">
-          <h3>Payment Details / पेमेंट तपशील</h3>
-
-          {/* 80G Checkbox */}
-          <label className="tr-checkbox">
-            <input
-              type="checkbox"
-              checked={is80G}
-              onChange={() => {
-                const next80G = !is80G;
-                setIs80G(next80G);
-                if (!next80G && selectedBank === "SBI Bank") setSelectedBank("");
-                if (!next80G) setPanCard("");
-              }}
-            />
-            <span className="tr-checkmark"></span>
-            80G Applicable
-          </label>
-
-          {/* Bank Dropdown */}
-          <div style={{ marginTop: "10px" }}>
-            <label className="tr-bank-label">Bank / बँक</label>
-            <select
-              className="input"
-              value={selectedBank}
-              onChange={(e) => setSelectedBank(e.target.value)}
-            >
-              <option value="">Select Bank</option>
-              {banks.map((bank, index) => (
-                <option key={index} value={bank}>{bank}</option>
-              ))}
-            </select>
+        {/* STEP INDICATOR */}
+        <div className="tr-step-bar">
+          <div className="tr-step tr-step-done">
+            <div className="tr-step-num">✓</div>
+            <span>Receipt Type</span>
           </div>
-
-          {/* Cash Amount — not required, for offline cash bookings */}
-          <div style={{ marginTop: "10px" }}>
-            <label className="tr-bank-label">
-              Cash Amount / रोख रक्कम
-            </label>
-            <input
-              type="number"
-              className="input"
-              placeholder="Enter cash amount (optional) / रोख रक्कम टाका"
-              min="1"
-              value={cashAmount}
-              onChange={(e) => setCashAmount(e.target.value)}
-            />
+          <div className="tr-step-line" />
+          <div className="tr-step tr-step-active">
+            <div className="tr-step-num">2</div>
+            <span>Booking Details</span>
           </div>
-
-          {/* PAN Card — only when 80G is checked */}
-          {is80G && (
-            <div style={{ marginTop: "10px" }}>
-              <label className="tr-bank-label">
-                PAN Card Number / पॅन कार्ड नंबर *
-              </label>
-              <input
-                className="input"
-                placeholder="e.g. ABCDE1234F"
-                value={panCard}
-                maxLength={10}
-                onChange={(e) =>
-                  setPanCard(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-                }
-              />
-            </div>
-          )}
         </div>
 
-        {/* Devotee Form */}
-        <DevoteeForm />
+        {/* RECEIPT BADGE */}
+        <div className="tr-receipt-badge">
+          🧾 Income Tax Receipt / आयकर पावती (Online)
+        </div>
 
-        {/* Purpose Details */}
-        <PurposeDropdown />
+        {/* PAYMENT DETAILS CARD */}
+        <div className="tr-card">
+          <div className="tr-card-header">
+            <div className="tr-card-icon">💳</div>
+            <div>
+              <p className="tr-card-title">Payment Details / पेमेंट तपशील</p>
+              <p className="tr-card-subtitle">Select payment method and tax exemption</p>
+            </div>
+          </div>
+          <div className="tr-card-body">
 
-        {/* Action Buttons */}
+            {/* 80G TOGGLE */}
+            <label className="tr-toggle-row">
+              <div className="tr-toggle-info">
+                <span className="tr-toggle-title">80G Tax Exemption Applicable</span>
+                <span className="tr-toggle-desc">Enable for income tax deduction certificate</span>
+              </div>
+              <div className="tr-toggle">
+                <input
+                  type="checkbox"
+                  checked={is80G}
+                  onChange={() => {
+                    const next = !is80G;
+                    setIs80G(next);
+                    if (!next && selectedBank === "SBI Bank") setSelectedBank("");
+                    if (!next) setPanCard("");
+                  }}
+                />
+                <span className="tr-toggle-slider" />
+              </div>
+            </label>
+
+            {/* BANK / PAYMENT METHOD PILLS */}
+            <div className="tr-field">
+              <label className="tr-bank-label">Payment Method / पेमेंट पद्धत</label>
+              <div className="tr-bank-options">
+                {visibleBanks.map((bank) => (
+                  <button
+                    key={bank.id}
+                    type="button"
+                    className={`tr-bank-pill${bank.isCash ? " tr-cash-pill" : ""}${selectedBank === bank.id ? " tr-bank-active" : ""}`}
+                    onClick={() => {
+                      setSelectedBank(bank.id);
+                      if (!bank.isCash) setCashAmount("");
+                    }}
+                  >
+                    <span className="tr-bank-icon">{bank.icon}</span>
+                    {bank.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* CASH AMOUNT — only when Cash selected */}
+            {isCashSelected && (
+              <div className="tr-cash-box">
+                <label className="tr-cash-box-label">💵 Cash Amount / रोख रक्कम *</label>
+                <input
+                  type="number"
+                  className="tr-cash-input"
+                  placeholder="Enter cash amount"
+                  min="1"
+                  value={cashAmount}
+                  onChange={(e) => setCashAmount(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* PAN CARD — only when 80G enabled */}
+            {is80G && (
+              <div className="tr-pan-box">
+                <label className="tr-pan-label">🪪 PAN Card Number / पॅन कार्ड नंबर *</label>
+                <input
+                  className="tr-pan-input"
+                  placeholder="e.g. ABCDE1234F"
+                  value={panCard}
+                  maxLength={10}
+                  onChange={(e) =>
+                    setPanCard(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                  }
+                />
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* DEVOTEE DETAILS CARD */}
+        <div className="tr-card">
+          <div className="tr-card-header">
+            <div className="tr-card-icon">👤</div>
+            <div>
+              <p className="tr-card-title">Devotee Details / भक्त तपशील</p>
+              <p className="tr-card-subtitle">Enter the devotee's personal information</p>
+            </div>
+          </div>
+          <div className="tr-card-body">
+            <DevoteeForm />
+          </div>
+        </div>
+
+        {/* PURPOSE CARD */}
+        <div className="tr-card">
+          <div className="tr-card-header">
+            <div className="tr-card-icon">📋</div>
+            <div>
+              <p className="tr-card-title">Purpose & Date / उद्देश आणि तारीख</p>
+              <p className="tr-card-subtitle">Select purpose, payment type and booking date</p>
+            </div>
+          </div>
+          <div className="tr-card-body">
+            <PurposeDropdown />
+          </div>
+        </div>
+
+        {/* ACTION BUTTONS */}
         <div className="tr-actions">
           <button
             className="secondary-btn"
@@ -249,7 +289,6 @@ export default function TaxReceipt() {
           >
             ← Back / मागे
           </button>
-
           <button
             className="primary-btn"
             onClick={handleCreateBooking}

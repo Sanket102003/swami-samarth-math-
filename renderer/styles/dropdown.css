@@ -92,3 +92,197 @@
   white-space: nowrap;
   box-sizing: border-box;
 }
+
+/* ==========================================
+   NEW — Section header
+========================================== */
+.pd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.pd-section-icon {
+  font-size: 22px;
+}
+
+.pd-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pd-section-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* ==========================================
+   NEW — Field group with label
+========================================== */
+.pd-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.pd-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ==========================================
+   NEW — Special / Regular flow wrappers
+========================================== */
+.pd-special-flow,
+.pd-regular-flow {
+  margin-top: 6px;
+}
+
+/* ==========================================
+   NEW — Amount display card (green)
+========================================== */
+.pd-amount-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.pd-amount-label {
+  font-size: 13px;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.pd-amount-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #15803d;
+}
+
+/* ==========================================
+   NEW — Remaining amount box (amber)
+========================================== */
+.pd-remaining-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.pd-remaining-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: #b45309;
+}
+
+/* ==========================================
+   NEW — Puja dates hint (orange)
+========================================== */
+.pd-dates-hint {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #c2410c;
+  margin-bottom: 14px;
+}
+
+/* ==========================================
+   NEW — Info tag (green)
+========================================== */
+.pd-info-tag {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #15803d;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+/* ==========================================
+   NEW — Payment buttons (Full / Advance)
+========================================== */
+.pd-pay-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.pd-pay-btn span:nth-child(2) {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pd-pay-btn small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.pd-pay-icon {
+  font-size: 20px;
+}
+
+.pd-pay-full {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+.pd-pay-full:hover {
+  background: #ffedd5;
+  border-color: #f97316;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+
+.pd-pay-advance {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.pd-pay-advance:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.react-datepicker__day--utsav-blocked {
+  background-color: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-radius: 50% !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+}
