@@ -594,6 +594,27 @@ export default function PurposeDropdown() {
   const safeAbhishekBooked = getBookedAbhishekDates().filter(Boolean);
 
   /* ==========================================
+     UTSAV NAME HELPER
+  ========================================== */
+  const getUtsavNameForDate = (date) => {
+    if (!date || !utsavList.length) return undefined;
+    // Use local date parts to avoid UTC shift
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    const dateKey = `${y}-${m}-${d}`;
+
+    const found = utsavList.find((u) => {
+      const dates = Array.isArray(u.dates)
+        ? u.dates
+        : (u.dates || "").split(",").map((d) => d.trim()).filter(Boolean);
+      return dates.some((d) => d.split("T")[0].trim() === dateKey);
+    });
+
+    return found ? found.name : undefined;
+  };
+
+  /* ==========================================
      DATE PICKER PROPS
   ========================================== */
   const regularDatePickerProps = {
@@ -611,6 +632,14 @@ export default function PurposeDropdown() {
     highlightDates: safeUtsavHighlightDates.length > 0
       ? [{ "react-datepicker__day--utsav-blocked": safeUtsavHighlightDates }]
       : [],
+    renderDayContents: (day, date) => {
+      const utsavName = getUtsavNameForDate(date);
+      return (
+        <span title={utsavName || ""}>
+          {day}
+        </span>
+      );
+    },
   };
 
   const specialDatePickerProps = {
@@ -628,15 +657,28 @@ export default function PurposeDropdown() {
   };
 
   const abhishekDatePickerProps = {
+    selected: null,
     onChange: handleAbhishekDateToggle,
     filterDate: isAbhishekDateSelectable,
     highlightDates: [
       ...(safeAbhishekSelected.length > 0 ? [{ "react-datepicker__day--abhishek-selected": safeAbhishekSelected }] : []),
       ...(safeAbhishekBooked.length > 0 ? [{ "react-datepicker__day--abhishek-booked": safeAbhishekBooked }] : []),
+      ...(safeUtsavHighlightDates.length > 0 ? [{ "react-datepicker__day--utsav-blocked": safeUtsavHighlightDates }] : []),
     ],
     minDate: new Date(),
-    inline: true,
-    calendarClassName: "pd-calendar pd-calendar-inline",
+    dateFormat: "dd-MM-yyyy",
+    placeholderText: "Select dates (click to add/remove)",
+    className: "pd-date-input",
+    isClearable: false,
+    calendarClassName: "pd-calendar",
+    renderDayContents: (day, date) => {
+      const utsavName = getUtsavNameForDate(date);
+      return (
+        <span title={utsavName || ""}>
+          {day}
+        </span>
+      );
+    },
   };
 
   const activeUtsavList = getActiveUtsavList();

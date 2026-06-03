@@ -592,3 +592,13 @@
 .pd-calendar .react-datepicker__navigation:hover *::before {
   border-color: #f97316;
 }
+/* ── ABHISHEK SELECTED DATES — hover state ── */
+.react-datepicker__day--abhishek-selected:hover {
+  background: #ea580c !important;
+  color: #ffffff !important;
+}
+
+/* ── ABHISHEK BOOKED DATES — line-through like utsav blocked ── */
+.react-datepicker__day--abhishek-booked {
+  text-decoration: line-through;
+}
