@@ -183,7 +183,7 @@ function Settings() {
         {/* ── BOOKING LIMITS ── */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <span className="settings-card-icon">📋</span>
+            <span className="settings-card-icon"></span>
             <div>
               <h3 className="settings-card-title">Booking Limits / बुकिंग मर्यादा</h3>
               <p className="settings-card-subtitle">Set maximum bookings allowed per day for each purpose</p>
@@ -225,7 +225,7 @@ function Settings() {
             onClick={handleSaveSettings}
             disabled={limitsLoading}
           >
-            {limitsLoading ? "Saving..." : "💾 Save Settings"}
+            {limitsLoading ? "Saving..." : "Save Settings"}
           </button>
 
           {showLimitsToast && (
@@ -238,7 +238,7 @@ function Settings() {
         {/* ── UTSAV DONATION MANAGEMENT ── */}
         <div className="settings-card" style={{ marginTop: "24px" }}>
           <div className="settings-card-header">
-            <span className="settings-card-icon">🎉</span>
+            <span className="settings-card-icon"></span>
             <div>
               <h3 className="settings-card-title">Utsav Donation Management / उत्सव देणगी व्यवस्थापन</h3>
               <p className="settings-card-subtitle">Add Utsav events with their available booking dates</p>
@@ -343,7 +343,7 @@ function Settings() {
                   return (
                     <div key={utsavId} className="utsav-item">
                       <div className="utsav-item-info">
-                        <div className="utsav-item-icon">🎊</div>
+                        <div className="utsav-item-icon"></div>
                         <div>
                           <p className="utsav-item-name">{utsav.name}</p>
                           <p className="utsav-item-dates">📅 {dates}</p>

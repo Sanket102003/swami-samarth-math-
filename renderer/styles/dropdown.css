@@ -1,237 +1,333 @@
-/* ===== DROPDOWN CONTAINER ===== */
-.pd-dropdown-container {
-  position: relative;
-  width: 100%;
-  margin-top: 10px;
+/* ============================================
+   PURPOSE DROPDOWN — Swami Samarth Math
+   Staff Dashboard · Professional UI
+   Warm saffron + ivory + deep brown palette
+============================================ */
+
+/* ── ROOT ── */
+.pd-root {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #f0ece6;
+  box-shadow: 0 2px 16px rgba(120, 60, 0, 0.06);
 }
 
-/* ===== DROPDOWN BOX (SELECT AREA) ===== */
-.pd-dropdown-box {
-  background: #fff;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  cursor: pointer;
+/* ── SECTION HEADER ── */
+.pd-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  transition: 0.2s;
+  gap: 14px;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #fdf0e4;
 }
 
-/* HOVER EFFECT */
-.pd-dropdown-box:hover {
-  border-color: #f97316;
-}
-
-/* ===== DROPDOWN LIST ===== */
-.pd-dropdown-list {
-  position: absolute;
-  width: 100%;
-  background: #fff;
+.pd-header-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
   border-radius: 12px;
-  margin-top: 5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-  max-height: 250px;
-  overflow-y: auto;
-  border: 1px solid #eee;
-}
-
-/* ===== DROPDOWN ITEM ===== */
-.pd-dropdown-item {
-  padding: 12px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.pd-dropdown-item:hover {
-  background: #d4a937;
-  color: #fff;
-}
-
-/* ===== SELECTED ITEM ===== */
-.pd-dropdown-item.pd-selected {
-  background: #f97316;
-  color: #fff;
-}
-
-/* ===== SCROLLBAR ===== */
-.pd-dropdown-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.pd-dropdown-list::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
-}
-
-/* ===== DATEPICKER ===== */
-.custom-datepicker .react-datepicker__day--outside-month {
-  pointer-events: none;
-  opacity: 0.3;
-  cursor: default;
-}
-
-/* ===== PAYMENT OPTIONS ===== */
-.pd-payment-options {
-  display: flex;
-  gap: 15px;
-  margin-top: 15px;
-  width: 100%;
-  align-items: stretch;
-}
-
-/* Both buttons equal width */
-.pd-payment-options .secondary-btn,
-.pd-payment-options .primary-btn {
-  flex: 1;
-  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  box-sizing: border-box;
-}
-
-/* ==========================================
-   NEW — Section header
-========================================== */
-.pd-section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.pd-section-icon {
   font-size: 22px;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  flex-shrink: 0;
 }
 
-.pd-section-title {
+.pd-header-title {
+  margin: 0 0 3px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1c0f00;
+  letter-spacing: -0.3px;
+}
+
+.pd-header-sub {
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 12px;
+  color: #a07850;
+  font-weight: 500;
 }
 
-.pd-section-sub {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-/* ==========================================
-   NEW — Field group with label
-========================================== */
-.pd-field-group {
+/* ── FIELD GROUP ── */
+.pd-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 7px;
+  margin-bottom: 16px;
 }
 
 .pd-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #5a3a1a;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
-/* ==========================================
-   NEW — Special / Regular flow wrappers
-========================================== */
-.pd-special-flow,
-.pd-regular-flow {
-  margin-top: 6px;
+.pd-label-hint {
+  font-weight: 400;
+  text-transform: none;
+  color: #a07850;
+  font-size: 12px;
 }
 
-/* ==========================================
-   NEW — Amount display card (green)
-========================================== */
-.pd-amount-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+.pd-required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+/* ── SELECT ── */
+.pd-select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e8ddd2;
   border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 14px;
+  font-size: 14px;
+  color: #1c0f00;
+  background: #fffcf8;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  appearance: auto;
+  font-family: inherit;
 }
 
-.pd-amount-label {
-  font-size: 13px;
-  color: #15803d;
-  font-weight: 600;
+.pd-select:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  background: #ffffff;
 }
 
-.pd-amount-value {
-  font-size: 18px;
-  font-weight: 800;
-  color: #15803d;
+.pd-select:disabled {
+  background: #f5f0eb;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-/* ==========================================
-   NEW — Remaining amount box (amber)
-========================================== */
-.pd-remaining-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+/* ── INPUT ── */
+.pd-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e8ddd2;
   border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #b45309;
+  font-size: 14px;
+  color: #1c0f00;
+  background: #fffcf8;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.pd-remaining-value {
-  font-size: 16px;
+.pd-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  background: #ffffff;
+}
+
+/* ── DATE INPUT ── */
+.pd-date-input {
+  width: 100% !important;
+  padding: 11px 14px !important;
+  border: 1.5px solid #e8ddd2 !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  color: #1c0f00 !important;
+  background: #fffcf8 !important;
+  outline: none !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.pd-date-input:focus {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12) !important;
+  background: #ffffff !important;
+}
+
+/* ── READONLY FIELD ── */
+.pd-readonly-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #f5f0eb;
+  border: 1.5px solid #e8ddd2;
+  border-radius: 10px;
+}
+
+.pd-readonly-prefix {
+  font-size: 15px;
+  font-weight: 700;
+  color: #a07850;
+}
+
+.pd-readonly-value {
+  font-size: 15px;
   font-weight: 800;
-  color: #b45309;
-}
-
-/* ==========================================
-   NEW — Puja dates hint (orange)
-========================================== */
-.pd-dates-hint {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #c2410c;
-  margin-bottom: 14px;
-}
-
-/* ==========================================
-   NEW — Info tag (green)
-========================================== */
-.pd-info-tag {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #15803d;
-  font-weight: 600;
-  margin-bottom: 14px;
-}
-
-/* ==========================================
-   NEW — Payment buttons (Full / Advance)
-========================================== */
-.pd-pay-btn {
+  color: #1c0f00;
   flex: 1;
+}
+
+.pd-readonly-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+/* ── EVENT TYPE BUTTONS ── */
+.pd-event-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.pd-event-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 14px 12px;
+  gap: 5px;
+  padding: 18px 12px;
+  border: 2px solid #e8ddd2;
+  border-radius: 14px;
+  background: #fffcf8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.pd-event-btn:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.15);
+}
+
+.pd-event-btn--active {
+  border-color: #f97316 !important;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5) !important;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.2) !important;
+}
+
+.pd-event-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pd-event-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.pd-event-en {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c0f00;
+}
+
+.pd-event-mr {
+  font-size: 12px;
+  color: #a07850;
+  font-weight: 500;
+}
+
+.pd-event-btn--active .pd-event-en {
+  color: #c2410c;
+}
+
+/* ── FLOW WRAPPER ── */
+.pd-flow {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid #f0ece6;
+}
+
+/* ── BHANDARA BUTTONS ── */
+.pd-bhandara-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.pd-bhandara-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 10px;
+  border: 2px solid #e8ddd2;
+  border-radius: 12px;
+  background: #fffcf8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.pd-bhandara-btn:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+.pd-bhandara-btn--active {
+  border-color: #f97316 !important;
+  background: linear-gradient(135deg, #fff7ed, #ffedd5) !important;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.2) !important;
+}
+
+.pd-bhandara-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pd-bhandara-icon {
+  font-size: 22px;
+}
+
+.pd-bhandara-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1c0f00;
+  text-align: center;
+}
+
+.pd-bhandara-amt {
+  font-size: 13px;
+  font-weight: 800;
+  color: #c2410c;
+}
+
+.pd-bhandara-btn--active .pd-bhandara-name {
+  color: #c2410c;
+}
+
+/* ── PAYMENT BUTTONS ── */
+.pd-pay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.pd-pay-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 16px 10px;
   border-radius: 12px;
   border: 2px solid transparent;
   cursor: pointer;
@@ -239,50 +335,260 @@
   font-family: inherit;
 }
 
-.pd-pay-btn span:nth-child(2) {
-  font-size: 14px;
-  font-weight: 700;
+.pd-pay-btn:hover {
+  transform: translateY(-2px);
 }
 
-.pd-pay-btn small {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-.pd-pay-icon {
-  font-size: 20px;
-}
-
-.pd-pay-full {
+.pd-pay-btn--full {
   background: #fff7ed;
   border-color: #fed7aa;
   color: #c2410c;
 }
 
-.pd-pay-full:hover {
+.pd-pay-btn--full:hover {
   background: #ffedd5;
   border-color: #f97316;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
 }
 
-.pd-pay-advance {
+.pd-pay-btn--advance {
   background: #eff6ff;
   border-color: #bfdbfe;
   color: #1d4ed8;
 }
 
-.pd-pay-advance:hover {
+.pd-pay-btn--advance:hover {
   background: #dbeafe;
   border-color: #3b82f6;
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
+.pd-pay-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.pd-pay-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pd-pay-sub {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* ── AMOUNT ROWS ── */
+.pd-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.pd-amount-row--green {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.pd-amount-row--green .pd-amount-row__label { color: #15803d; }
+.pd-amount-row--green .pd-amount-row__value { color: #15803d; }
+
+.pd-amount-row--amber {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+}
+
+.pd-amount-row--amber .pd-amount-row__label { color: #b45309; }
+.pd-amount-row--amber .pd-amount-row__value { color: #b45309; }
+
+.pd-amount-row--blue {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+}
+
+.pd-amount-row--blue .pd-amount-row__label { color: #1d4ed8; }
+.pd-amount-row--blue .pd-amount-row__value { color: #1d4ed8; }
+
+.pd-amount-row__label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pd-amount-row__value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ── BADGE ── */
+.pd-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pd-badge--green {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  color: #15803d;
+}
+
+/* ── ABHISHEK FLOW ── */
+.pd-abhishek-flow {
+  padding: 16px;
+  background: #fffcf8;
+  border: 1.5px solid #f0ece6;
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+/* ── CALENDAR WRAP ── */
+.pd-calendar-wrap {
+  border: 1.5px solid #e8ddd2;
+  border-radius: 12px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+/* ── CALENDAR STYLING ── */
+.pd-calendar .react-datepicker {
+  border: none;
+  font-family: inherit;
+  background: #fffcf8;
+}
+
+.pd-calendar .react-datepicker__header {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border-bottom: 1px solid #fed7aa;
+}
+
+.pd-calendar .react-datepicker__current-month,
+.pd-calendar .react-datepicker__day-name {
+  color: #c2410c;
+  font-weight: 700;
+}
+
+.pd-calendar .react-datepicker__day--selected,
+.pd-calendar .react-datepicker__day--keyboard-selected {
+  background: #f97316 !important;
+  color: #ffffff !important;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.pd-calendar .react-datepicker__day:hover {
+  background: #fff7ed;
+  border-radius: 50%;
+}
+
+.pd-calendar .react-datepicker__day--today {
+  font-weight: 800;
+  color: #f97316;
+}
+
+.pd-calendar .react-datepicker__day--disabled {
+  color: #d1c4b8;
+  cursor: not-allowed;
+}
+
+.pd-calendar-inline .react-datepicker {
+  width: 100%;
+}
+
+/* ── UTSAV BLOCKED DATES ── */
 .react-datepicker__day--utsav-blocked {
-  background-color: #fee2e2 !important;
+  background: #fee2e2 !important;
   color: #dc2626 !important;
   border-radius: 50% !important;
   cursor: not-allowed !important;
   text-decoration: line-through;
+  font-weight: 600;
+}
+
+/* ── UTSAV HIGHLIGHT (special events) ── */
+.react-datepicker__day--highlighted {
+  background: #fff7ed !important;
+  color: #c2410c !important;
+  border-radius: 50% !important;
+  font-weight: 700 !important;
+  border: 2px solid #f97316 !important;
+}
+
+/* ── ABHISHEK SELECTED DATES ── */
+.react-datepicker__day--abhishek-selected {
+  background: #f97316 !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  font-weight: 700 !important;
+}
+
+/* ── ABHISHEK BOOKED DATES ── */
+.react-datepicker__day--abhishek-booked {
+  background: #fecaca !important;
+  color: #dc2626 !important;
+  border-radius: 50% !important;
+  font-weight: 600 !important;
+  cursor: not-allowed !important;
+}
+
+/* ── DATE TAGS ── */
+.pd-date-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pd-date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ed;
+  border: 1.5px solid #f97316;
+  color: #c2410c;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pd-date-tag__remove {
+  background: none;
+  border: none;
+  color: #f97316;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.pd-date-tag__remove:hover {
+  color: #dc2626;
+}
+
+/* ── OUTSIDE MONTH DAYS ── */
+.pd-calendar .react-datepicker__day--outside-month {
+  pointer-events: none;
+  opacity: 0.25;
+}
+
+/* ── REACT-DATEPICKER NAVIGATION ── */
+.pd-calendar .react-datepicker__navigation-icon::before {
+  border-color: #c2410c;
+}
+
+.pd-calendar .react-datepicker__navigation:hover *::before {
+  border-color: #f97316;
 }
