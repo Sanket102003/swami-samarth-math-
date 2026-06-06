@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { purposes, abhishekTypes } from "../constants/purposes";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import apiRequest from "../services/api";
@@ -12,25 +11,8 @@ const ABHISHEK_GOTRAS = [
   "अत्रि", "विशिष्ट", "कश्यप", "अगस्ती", "Other",
 ];
 
-const SPECIAL_AMOUNTS = {
-  "Full Bhandara / पूर्ण भंडारा": 100000,
-  "Half Bhandara / अर्ध भंडारा": 50000,
-};
-
-const SPECIAL_ADVANCE = {
-  "Full Bhandara / पूर्ण भंडारा": 10000,
-  "Half Bhandara / अर्ध भंडारा": 5000,
-};
-
-const NO_CALENDAR_PURPOSES = [
-  "Two Wheeler / दुचाकी (₹251)",
-  "Three Wheeler / तीनचाकी (₹351)",
-  "Four Wheeler / चारचाकी (₹551)",
-  "गाडीपुजा (टे पो, बस इयादी.)",
-];
-
 /* ==========================================
-   SAFE DATE HELPER — prevents Invalid time value
+   SAFE DATE HELPER
 ========================================== */
 const safeDate = (d) => {
   if (!d) return null;
@@ -44,49 +26,41 @@ const safeDate = (d) => {
 };
 
 export default function PurposeDropdown() {
-  const [purpose, setPurpose] = useState("");
-  const [baseAmount, setBaseAmount] = useState(0);
-  const [amount, setAmount] = useState("");
-  const [bookingDate, setBookingDate] = useState(null);
-  const [advance, setAdvance] = useState(0);
-  const [paymentType, setPaymentType] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [payNowAmount, setPayNowAmount] = useState("");
-  const [allBookings, setAllBookings] = useState([]);
-  const [settings, setSettings] = useState({});
-  const [bookingsLoading, setBookingsLoading] = useState(true);
-
+  /* ── Core state ── */
   const [eventType, setEventType] = useState("");
-  const [utsavList, setUtsavList] = useState([]);
-  const [selectedUtsav, setSelectedUtsav] = useState("");
-  const [utsavDates, setUtsavDates] = useState([]);
-  const [specialPurpose, setSpecialPurpose] = useState("");
-  const [abhishekGotra, setAbhishekGotra] = useState("");
-  const [abhishekType, setAbhishekType] = useState("");
-  const [abhishekDates, setAbhishekDates] = useState([]);
+  const [sevaList, setSevaList] = useState([]);
+  const [sevaLoading, setSevaLoading] = useState(true);
+  const [allBookings, setAllBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  /* ── Selected seva ── */
+  const [selectedSeva, setSelectedSeva] = useState(null); // full seva object
+  const [selectedSevaId, setSelectedSevaId] = useState("");
+
+  /* ── Amount ── */
+  const [amount, setAmount] = useState("");
+  const [baseAmount, setBaseAmount] = useState(0);
+
+  /* ── Sub-purpose ── */
+  const [selectedSubPurpose, setSelectedSubPurpose] = useState("");
   const [pricePerDate, setPricePerDate] = useState("");
 
-  /* ==========================================
-     PURPOSE GROUPS
-  ========================================== */
-  const regularPurposes = purposes.filter(
-    (p) => p.name !== "Utsav Donation / उत्सव देणगी"
-  );
+  /* ── Gotra ── */
+  const [gotra, setGotra] = useState("");
+  const [gotraCustom, setGotraCustom] = useState("");
 
-  const isAbhishek = purpose === "Abhishek / अभिषेक";
-  const isDonation = purpose === "Donation / देणगी";
-  const isRegularSpecial =
-    purpose === "Full Bhandara / पूर्ण भंडारा (₹25,000)" ||
-    purpose === "Half Bhandara / अर्ध भंडारा (₹15,000)";
-  const isNoCalendar = NO_CALENDAR_PURPOSES.includes(purpose);
-  const isShirapasad = purpose === "Shirapasad / शिराप्रसाद (₹5,001)";
-  const isVidaprasad = purpose === "Vidaprasad / विडाप्रसाद (₹251)";
-  const normalizedPurpose = purpose.toLowerCase();
+  /* ── Payment ── */
+  const [paymentType, setPaymentType] = useState("");
+  const [payNowAmount, setPayNowAmount] = useState("");
+  const [advance, setAdvance] = useState(0);
 
-  const abhishekTotal =
-    pricePerDate && abhishekDates.length
-      ? Number(pricePerDate) * abhishekDates.length
-      : 0;
+  /* ── Dates ── */
+  const [bookingDate, setBookingDate] = useState(null);
+  const [multiDates, setMultiDates] = useState([]); // for multi-date sevas
+
+  /* ── Special events ── */
+  const [selectedSpecialSeva, setSelectedSpecialSeva] = useState(null);
 
   /* ==========================================
      HELPERS
@@ -97,31 +71,18 @@ export default function PurposeDropdown() {
     catch { return {}; }
   }, []);
 
-  const saveToLocalStorage = useCallback(
-    (overrides = {}) => {
-      const existing = getBookingForm();
-      const updated = { ...existing, ...overrides };
-      const totalAmount = Number(updated.amount ?? updated.baseAmount ?? 0);
-      const paidAmount = Number(updated.advance ?? 0);
-      const remaining = Math.max(totalAmount - paidAmount, 0);
-      updated.remainingAmount = remaining;
-      updated.status = remaining === 0 ? "Approved" : "Pending";
-      localStorage.setItem("bookingForm", JSON.stringify(updated));
-    },
-    [getBookingForm]
-  );
+  const saveToLocalStorage = useCallback((overrides = {}) => {
+    const existing = getBookingForm();
+    const updated = { ...existing, ...overrides };
+    const totalAmount = Number(updated.amount ?? updated.baseAmount ?? 0);
+    const paidAmount = Number(updated.advance ?? 0);
+    const remaining = Math.max(totalAmount - paidAmount, 0);
+    updated.remainingAmount = remaining;
+    updated.status = remaining === 0 ? "Approved" : "Pending";
+    localStorage.setItem("bookingForm", JSON.stringify(updated));
+  }, [getBookingForm]);
 
-  // Display format: dd-MM-yyyy
-  const toLocalDateString = (date) => {
-    if (!date) return "";
-    const d = String(date.getDate()).padStart(2, "0");
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const y = date.getFullYear();
-    return `${d}-${m}-${y}`;
-  };
-
-  // DB format: YYYY-MM-DD (safe for backend sorting)
-  const toDBDateString = (date) => {
+  const toDBDate = (date) => {
     if (!date) return "";
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -129,74 +90,40 @@ export default function PurposeDropdown() {
     return `${y}-${m}-${d}`;
   };
 
-  // Format date range for utsav dropdown display
-  const formatUtsavDateRange = (dates) => {
-    if (!dates || dates.length === 0) return "";
-    const sorted = [...dates].sort();
-    const fmt = (d) => {
-      const parts = d.split("T")[0].split("-");
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    };
-    if (sorted.length === 1) return fmt(sorted[0]);
-    return `${fmt(sorted[0])} to ${fmt(sorted[sorted.length - 1])}`;
+  const toDisplayDate = (date) => {
+    if (!date) return "";
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
   };
-
-  // Filter utsavs where at least one date is today or future
-  const getActiveUtsavList = useCallback(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return utsavList.filter((utsav) => {
-      const dates = Array.isArray(utsav.dates)
-        ? utsav.dates
-        : (utsav.dates || "").split(",").map((d) => d.trim()).filter(Boolean);
-      return dates.some((d) => {
-        const date = safeDate(d);
-        return date && date >= today;
-      });
-    });
-  }, [utsavList]);
-
-  // Get all future utsav dates as YYYY-MM-DD strings (safe)
-  const getAllUtsavDates = useCallback(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const allDates = [];
-    utsavList.forEach((utsav) => {
-      const dates = Array.isArray(utsav.dates)
-        ? utsav.dates
-        : (utsav.dates || "").split(",").map((d) => d.trim()).filter(Boolean);
-      dates.forEach((d) => {
-        const clean = d.split("T")[0].trim();
-        const date = safeDate(clean);
-        if (date && date >= today) allDates.push(clean);
-      });
-    });
-    return allDates;
-  }, [utsavList]);
 
   /* ==========================================
      FETCH DATA
   ========================================== */
   const fetchData = useCallback(async () => {
+    // Fetch seva list
     try {
-      const response = await apiRequest("/get_settings");
-      const s = response.settings || response.data || response;
-      setSettings({ shirprasad: Number(s.shirprasad ?? 3), vidaprasad: Number(s.vidaprasad ?? 15) });
-    } catch { setSettings({ shirprasad: 3, vidaprasad: 15 }); }
+      const res = await apiRequest("/get_seva_list");
+      const list = res.sevaList || res.data || res || [];
+      setSevaList(Array.isArray(list) ? list : []);
+    } catch {
+      setSevaList([]);
+    } finally {
+      setSevaLoading(false);
+    }
 
+    // Fetch all bookings for date availability check
     try {
       setBookingsLoading(true);
       const data = await apiRequest("/Bookings");
-      const list = Array.isArray(data) ? data : data.bookings || data.items || data.data || [];
+      const list = Array.isArray(data) ? data : data.bookings || [];
       setAllBookings(list);
-    } catch { setAllBookings([]); }
-    finally { setBookingsLoading(false); }
-
-    try {
-      const response = await apiRequest("/get_utsav_list");
-      const list = response.utsavList || response.data || response || [];
-      setUtsavList(Array.isArray(list) ? list : []);
-    } catch { setUtsavList([]); }
+    } catch {
+      setAllBookings([]);
+    } finally {
+      setBookingsLoading(false);
+    }
   }, []);
 
   /* ==========================================
@@ -206,38 +133,38 @@ export default function PurposeDropdown() {
     const init = async () => {
       const saved = getBookingForm();
       if (saved._id || saved.id || saved.bookingId) setIsEditMode(true);
-      if (saved.purpose) {
-        setPurpose(saved.purpose);
-        const selected = purposes.find((p) => p.name === saved.purpose);
-        setBaseAmount(Number(saved.baseAmount ?? selected?.amount ?? saved.amount ?? 0));
-      }
-      if (saved.amount !== undefined) setAmount(saved.amount);
-      if (saved.bookingDate) {
-        const d = safeDate(saved.bookingDate);
-        if (d) setBookingDate(d);
-      }
+
+      // Restore state from localStorage
+      if (saved.eventType) setEventType(saved.eventType);
+      if (saved.selectedSevaId) setSelectedSevaId(saved.selectedSevaId);
+      if (saved.amount !== undefined) setAmount(String(saved.amount));
+      if (saved.bookingDate) { const d = safeDate(saved.bookingDate); if (d) setBookingDate(d); }
       if (saved.advance !== undefined) setAdvance(Number(saved.advance ?? 0));
       if (saved.paymentType) setPaymentType(saved.paymentType);
-      if (saved.eventType) setEventType(saved.eventType);
-      if (saved.selectedUtsav) setSelectedUtsav(saved.selectedUtsav);
-      if (saved.specialPurpose) setSpecialPurpose(saved.specialPurpose);
-      if (saved.abhishekGotra) setAbhishekGotra(saved.abhishekGotra);
-      if (saved.abhishekType) setAbhishekType(saved.abhishekType);
+      if (saved.selectedSubPurpose) setSelectedSubPurpose(saved.selectedSubPurpose);
+      if (saved.gotra) setGotra(saved.gotra);
       if (saved.pricePerDate) setPricePerDate(saved.pricePerDate);
-      if (saved.abhishekDates) {
-        const validDates = saved.abhishekDates
-          .map((d) => safeDate(d))
-          .filter(Boolean);
-        setAbhishekDates(validDates);
+      if (saved.multiDates) {
+        setMultiDates(saved.multiDates.map((d) => safeDate(d)).filter(Boolean));
       }
       if (saved.advance !== undefined && saved.originalAdvance === undefined) {
         saveToLocalStorage({ originalAdvance: Number(saved.advance ?? 0) });
       }
-      setPayNowAmount("");
+
       await fetchData();
     };
     init();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ==========================================
+     RESTORE selectedSeva after sevaList loads
+  ========================================== */
+  useEffect(() => {
+    if (sevaList.length > 0 && selectedSevaId) {
+      const found = sevaList.find((s) => (s._id || s.id) === selectedSevaId);
+      if (found) setSelectedSeva(found);
+    }
+  }, [sevaList, selectedSevaId]);
 
   /* ==========================================
      DERIVED VALUES
@@ -248,299 +175,282 @@ export default function PurposeDropdown() {
   const remainingAmount = Math.max(baseAmount - Number(savedData.advance ?? 0), 0);
   const currentRemainingAmount = Math.max(baseAmount - previousPaidAmount, 0);
 
+  // Split sevas by event type
+  const specialSevas = sevaList.filter((s) => s.eventType === "special");
+  const regularSevas = sevaList.filter((s) => s.eventType === "regular");
+
+  // Multi-date total
+  const multiDateTotal = pricePerDate && multiDates.length
+    ? Number(pricePerDate) * multiDates.length
+    : 0;
+
   /* ==========================================
-     ACTIVE BOOKINGS HELPER
+     ACTIVE BOOKINGS FOR DATE
   ========================================== */
-  const getActiveBookingsForDate = useCallback(
-    (dateKey) =>
-      allBookings.filter((booking) => {
-        const status = (booking.status || "").toLowerCase();
-        if (status === "cancelled") return false;
-        const bDate = (booking.bookingDate || booking.date || "").split("T")[0].trim();
-        return bDate === dateKey;
-      }),
+  const getActiveBookingsForDate = useCallback((dateKey) =>
+    allBookings.filter((b) => {
+      if ((b.status || "").toLowerCase() === "cancelled") return false;
+      const bDate = (b.bookingDate || b.date || "").split("T")[0].trim();
+      return bDate === dateKey;
+    }),
     [allBookings]
   );
 
   /* ==========================================
-     BOOKED ABHISHEK DATES
+     DATE SELECTABLE — Regular Sevas
   ========================================== */
-  const getBookedAbhishekDates = useCallback(() => {
-    if (!abhishekType) return [];
-    return allBookings
-      .filter((b) => {
-        const status = (b.status || "").toLowerCase();
-        if (status === "cancelled") return false;
-        return b.abhishekType === abhishekType;
-      })
-      .map((b) => safeDate((b.bookingDate || b.date || "").split("T")[0]))
-      .filter(Boolean);
-  }, [allBookings, abhishekType]);
-
-  /* ==========================================
-     DATE SELECTION — REGULAR
-  ========================================== */
-  const isDateSelectable = useCallback(
-    (date) => {
-      if (!date || !purpose) return false;
+  const isDateSelectable = useCallback((date) => {
+    if (!date) return false;
+    // If no seva selected yet, allow future dates (calendar still shows)
+    if (!selectedSeva) {
       const selected = new Date(date);
       selected.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selected < today) return false;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      return selected >= today;
+    }
 
-      // Block ALL utsav dates
-      const allUtsavDates = getAllUtsavDates(); // YYYY-MM-DD strings
-      const selectedDBKey = toDBDateString(selected); // YYYY-MM-DD
-      if (allUtsavDates.includes(selectedDBKey)) return false;
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
 
-      const dayOfWeek = selected.getDay();
-      if (normalizedPurpose.includes("full bhandara") || normalizedPurpose.includes("half bhandara")) {
-        if (dayOfWeek !== 0 && dayOfWeek !== 4) return false;
-      }
-      if (normalizedPurpose.includes("shirapasad") || normalizedPurpose.includes("vidaprasad")) {
-        if (dayOfWeek !== 4) return false;
-      }
+    const dateRule = selectedSeva.dateRule || "any";
+    const dateKey = toDBDate(selected);
+    const dayOfWeek = selected.getDay();
 
-      const dateKey = toDBDateString(selected);
-      const activeBookings = getActiveBookingsForDate(dateKey);
+    // Block all special seva specific dates from regular booking
+    const allSpecialDates = specialSevas.flatMap((s) =>
+      (s.specificDates || s.dates || []).map((d) =>
+        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
+      )
+    );
+    if (allSpecialDates.includes(dateKey)) return false;
 
-      if (normalizedPurpose.includes("full bhandara") || normalizedPurpose.includes("half bhandara")) {
-        const activeFullCount = activeBookings.filter((b) => (b.purpose || "").toLowerCase().includes("full bhandara")).length;
-        const activeHalfCount = activeBookings.filter((b) => (b.purpose || "").toLowerCase().includes("half bhandara")).length;
-        if (normalizedPurpose.includes("full bhandara")) { if (activeFullCount >= 1 || activeHalfCount >= 1) return false; }
-        if (normalizedPurpose.includes("half bhandara")) { if (activeFullCount >= 1 || activeHalfCount >= 2) return false; }
+    // Day restrictions
+    if (dateRule === "thursday" && dayOfWeek !== 4) return false;
+    if (dateRule === "sun_thu" && dayOfWeek !== 0 && dayOfWeek !== 4) return false;
+    if (dateRule === "specific") {
+      const allowed = (selectedSeva.specificDates || []).map((d) =>
+        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
+      );
+      if (!allowed.includes(dateKey)) return false;
+    }
+
+    // Max per date check
+    const maxPerDate = Number(selectedSeva.maxPerDate || 0);
+    if (maxPerDate > 0) {
+      const activeOnDate = getActiveBookingsForDate(dateKey);
+
+      // Cross-block: Full Bhandara ↔ Half Bhandara
+      const sevaName = (selectedSeva.displayName || "").toLowerCase();
+      if (sevaName.includes("full bhandara") || sevaName.includes("half bhandara")) {
+        const fullCount = activeOnDate.filter((b) => (b.purpose || "").toLowerCase().includes("full bhandara")).length;
+        const halfCount = activeOnDate.filter((b) => (b.purpose || "").toLowerCase().includes("half bhandara")).length;
+        if (sevaName.includes("full bhandara") && (fullCount >= 1 || halfCount >= 1)) return false;
+        if (sevaName.includes("half bhandara") && (fullCount >= 1 || halfCount >= 2)) return false;
         return true;
       }
 
-      if (normalizedPurpose.includes("shirapasad") || normalizedPurpose.includes("vidaprasad")) {
-        const maxLimit = normalizedPurpose.includes("shirapasad") ? Number(settings.shirprasad ?? 3) : Number(settings.vidaprasad ?? 15);
-        const count = activeBookings.filter((b) => b.purpose === purpose).length;
-        return count < maxLimit;
-      }
-
-      return true;
-    },
-    [purpose, normalizedPurpose, getActiveBookingsForDate, settings, getAllUtsavDates]
-  );
-
-  /* ==========================================
-     SAFE NORMALIZE — handles UTC timezone shift
-     Always parses YYYY-MM-DD as LOCAL date
-     (avoids the "off by one day" bug in IST)
-  ========================================== */
-  const normalizeToLocalYMD = (d) => {
-    if (!d) return "";
-
-    // Already a Date object — convert to local YYYY-MM-DD
-    if (d instanceof Date) return toDBDateString(d);
-
-    const str = String(d).split("T")[0].trim();
-
-    // YYYY-MM-DD — parse as LOCAL date to avoid UTC shift
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-      const [y, m, day] = str.split("-").map(Number);
-      const localDate = new Date(y, m - 1, day);
-      return toDBDateString(localDate);
+      const count = activeOnDate.filter((b) => b.purpose === selectedSeva.displayName).length;
+      if (count >= maxPerDate) return false;
     }
 
-    // DD-MM-YYYY → YYYY-MM-DD
-    if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
-      const [dd, mm, yyyy] = str.split("-");
-      return `${yyyy}-${mm}-${dd}`;
-    }
-
-    return str;
-  };
+    return true;
+  }, [selectedSeva, specialSevas, getActiveBookingsForDate]);
 
   /* ==========================================
-     DATE SELECTION — SPECIAL EVENTS
-     NO Thursday/Sunday restriction.
-     Only dates within admin's utsav range are selectable.
-     Already-booked dates are blocked (not just highlighted).
+     DATE SELECTABLE — Special Sevas
   ========================================== */
-  const isSpecialDateSelectable = useCallback(
-    (date) => {
-      if (!date || !selectedUtsav || !utsavDates.length) return false;
+  const isSpecialDateSelectable = useCallback((date) => {
+    if (!date || !selectedSpecialSeva || !selectedSeva) return false;
 
-      const selected = new Date(date);
-      selected.setHours(0, 0, 0, 0);
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selected < today) return false;
+    const dateKey = toDBDate(selected);
+    const allowedDates = (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || [])
+      .map((d) => typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d));
 
-      // Convert selected date to YYYY-MM-DD using LOCAL time
-      const selectedKey = toDBDateString(selected);
+    if (!allowedDates.includes(dateKey)) return false;
 
-      // Normalize ALL utsav dates using LOCAL time (fixes UTC+5:30 shift)
-      const normalizedUtsavDates = utsavDates.map((d) => normalizeToLocalYMD(d));
+    // Max per date check for special seva
+    const maxPerDate = Number(selectedSpecialSeva.maxPerDate || 0);
+    if (maxPerDate > 0) {
+      const activeOnDate = getActiveBookingsForDate(dateKey);
 
-      // Only allow dates in admin's defined range — NO day-of-week restriction
-      if (!normalizedUtsavDates.includes(selectedKey)) return false;
-
-      // Block already fully-booked dates
-      if (specialPurpose) {
-        const activeOnDate = getActiveBookingsForDate(selectedKey);
-        const fullCount = activeOnDate.filter((b) =>
-          (b.purpose || "").toLowerCase().includes("full bhandara")
-        ).length;
-        const halfCount = activeOnDate.filter((b) =>
-          (b.purpose || "").toLowerCase().includes("half bhandara")
-        ).length;
-
-        if (specialPurpose.toLowerCase().includes("full bhandara")) {
-          if (fullCount >= 1 || halfCount >= 1) return false;
-        }
-        if (specialPurpose.toLowerCase().includes("half bhandara")) {
-          if (fullCount >= 1 || halfCount >= 2) return false;
-        }
+      // Cross-block for Bhandara types
+      if (selectedSeva) {
+        const subName = (selectedSeva.displayName || "").toLowerCase();
+        const fullCount = activeOnDate.filter((b) => (b.purpose || "").toLowerCase().includes("full bhandara")).length;
+        const halfCount = activeOnDate.filter((b) => (b.purpose || "").toLowerCase().includes("half bhandara")).length;
+        if (subName.includes("full bhandara") && (fullCount >= 1 || halfCount >= 1)) return false;
+        if (subName.includes("half bhandara") && (fullCount >= 1 || halfCount >= 2)) return false;
       }
 
-      return true;
-    },
-    [selectedUtsav, utsavDates, specialPurpose, getActiveBookingsForDate]
-  );
+      const count = activeOnDate.filter((b) => b.purpose === selectedSeva.displayName).length;
+      if (count >= maxPerDate) return false;
+    }
+
+    return true;
+  }, [selectedSeva, selectedSpecialSeva, getActiveBookingsForDate]);
 
   /* ==========================================
-     DATE SELECTION — ABHISHEK
-     Block dates reserved for special events (utsav dates). 
-     Abhishek cannot be booked on any utsav date.
+     DATE SELECTABLE — Multi-date (Abhishek-type)
   ========================================== */
-  const isAbhishekDateSelectable = useCallback(
-    (date) => {
-      if (!date) return false;
+  const isMultiDateSelectable = useCallback((date) => {
+    if (!date || !selectedSeva) return false;
 
-      const selected = new Date(date);
-      selected.setHours(0, 0, 0, 0);
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selected < today) return false;
+    const dateKey = toDBDate(selected);
 
-      // Block ALL utsav dates for Abhishek too
-      const allUtsavDates = getAllUtsavDates(); // returns YYYY-MM-DD strings
-      const selectedKey = toDBDateString(selected);
-      if (allUtsavDates.includes(selectedKey)) return false;
+    // Block special seva dates
+    const allSpecialDates = specialSevas.flatMap((s) =>
+      (s.specificDates || s.dates || []).map((d) =>
+        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
+      )
+    );
+    if (allSpecialDates.includes(dateKey)) return false;
 
-      // Check slot availability per abhishekType
-      const selectedType = abhishekTypes.find((a) => a.name === abhishekType);
-      if (selectedType && selectedType.slots) {
+    // Check sub-purpose slot availability
+    if (selectedSubPurpose && selectedSeva.subPurposes) {
+      const sub = selectedSeva.subPurposes.find((s) => s.name === selectedSubPurpose);
+      if (sub && sub.slots > 0) {
         const bookedCount = allBookings.filter((b) => {
-          const status = (b.status || "").toLowerCase();
-          if (status === "cancelled") return false;
+          if ((b.status || "").toLowerCase() === "cancelled") return false;
           const bDate = (b.bookingDate || b.date || "").split("T")[0];
-          return bDate === selectedKey && b.abhishekType === abhishekType;
+          return bDate === dateKey && b.subPurpose === selectedSubPurpose;
         }).length;
-        if (bookedCount >= selectedType.slots) return false;
+        if (bookedCount >= sub.slots) return false;
       }
+    }
 
-      return true;
-    },
-    [abhishekType, allBookings, getAllUtsavDates]
-  );
+    return true;
+  }, [selectedSeva, selectedSubPurpose, specialSevas, allBookings]);
 
   /* ==========================================
-     ABHISHEK MULTI-DATE TOGGLE
+     RESET — called when event type changes
   ========================================== */
-  const handleAbhishekDateToggle = (date) => {
-    if (!date) return;
-    const dateStr = toDBDateString(date);
-    const alreadySelected = abhishekDates.some((d) => toDBDateString(d) === dateStr);
-
-    if (alreadySelected) {
-      const newDates = abhishekDates.filter((d) => toDBDateString(d) !== dateStr);
-      setAbhishekDates(newDates);
-      const newTotal = pricePerDate ? Number(pricePerDate) * newDates.length : 0;
-      setBaseAmount(newTotal);
-      saveToLocalStorage({ abhishekDates: newDates.map(toDBDateString), amount: newTotal, baseAmount: newTotal, advance: newTotal, remainingAmount: 0 });
-      return;
-    }
-
-    const selectedType = abhishekTypes.find((a) => a.name === abhishekType);
-    if (selectedType && selectedType.slots) {
-      const bookedCount = allBookings.filter((b) => {
-        const status = (b.status || "").toLowerCase();
-        if (status === "cancelled") return false;
-        const bDate = (b.bookingDate || b.date || "").split("T")[0];
-        return bDate === dateStr && b.abhishekType === abhishekType;
-      }).length;
-      if (bookedCount >= selectedType.slots) {
-        alert(`Only ${selectedType.slots} slots available for this date!`);
-        return;
-      }
-    }
-
-    const newDates = [...abhishekDates, date];
-    setAbhishekDates(newDates);
-    const newTotal = pricePerDate ? Number(pricePerDate) * newDates.length : 0;
-    setBaseAmount(newTotal);
-    saveToLocalStorage({ abhishekDates: newDates.map(toDBDateString), amount: newTotal, baseAmount: newTotal, advance: newTotal, remainingAmount: 0 });
+  const resetSelections = (keepEventType = false) => {
+    setSelectedSeva(null); setSelectedSevaId("");
+    setAmount(""); setBaseAmount(0);
+    setSelectedSubPurpose(""); setPricePerDate("");
+    setGotra(""); setGotraCustom("");
+    setPaymentType(""); setPayNowAmount(""); setAdvance(0);
+    setBookingDate(null); setMultiDates([]);
+    setSelectedSpecialSeva(null);
+    saveToLocalStorage({
+      ...(keepEventType ? {} : { eventType: "" }),
+      selectedSevaId: "", purpose: "", baseAmount: 0, amount: 0,
+      advance: 0, originalAdvance: 0, remainingAmount: 0,
+      bookingDate: "", paymentType: "", selectedSubPurpose: "",
+      gotra: "", pricePerDate: "", multiDates: [], status: "Pending",
+    });
   };
 
   /* ==========================================
      HANDLERS
   ========================================== */
-  const handleDatePickerChange = (date) => {
-    if (!date) { setBookingDate(null); saveToLocalStorage({ bookingDate: "" }); return; }
-    setBookingDate(date);
-    saveToLocalStorage({ bookingDate: toDBDateString(date) });
-  };
-
   const handleEventTypeChange = (type) => {
-    setEventType(type); setPurpose(""); setBaseAmount(0); setAmount("");
-    setBookingDate(null); setAdvance(0); setPaymentType(""); setPayNowAmount("");
-    setSelectedUtsav(""); setUtsavDates([]); setSpecialPurpose("");
-    setAbhishekGotra(""); setAbhishekType(""); setAbhishekDates([]); setPricePerDate("");
-    saveToLocalStorage({ eventType: type, purpose: "", baseAmount: 0, amount: 0, advance: 0, originalAdvance: 0, remainingAmount: 0, bookingDate: "", paymentType: "", selectedUtsav: "", specialPurpose: "", abhishekGotra: "", abhishekType: "", abhishekDates: [], pricePerDate: "", status: "Pending" });
+    setEventType(type);
+    resetSelections();
+    saveToLocalStorage({ eventType: type });
   };
 
-  const handleUtsavChange = (e) => {
+  // Regular seva selected
+  const handleSevaChange = (e) => {
+    const id = e.target.value;
+    const found = sevaList.find((s) => (s._id || s.id) === id);
+    setSelectedSeva(found || null);
+    setSelectedSevaId(id);
+    setAmount(""); setBaseAmount(found?.amountType === "fixed" ? Number(found.amount) : 0);
+    setSelectedSubPurpose(""); setPricePerDate("");
+    setGotra(""); setGotraCustom("");
+    setPaymentType(""); setPayNowAmount(""); setAdvance(0);
+    setBookingDate(null); setMultiDates([]);
+
+    saveToLocalStorage({
+      selectedSevaId: id,
+      purpose: found?.displayName || "",
+      baseAmount: found?.amountType === "fixed" ? Number(found.amount) : 0,
+      amount: found?.amountType === "fixed" ? Number(found.amount) : 0,
+      advance: 0, originalAdvance: 0,
+      remainingAmount: found?.amountType === "fixed" ? Number(found.amount) : 0,
+      bookingDate: "", paymentType: "", selectedSubPurpose: "",
+      gotra: "", pricePerDate: "", multiDates: [], status: "Pending",
+    });
+  };
+
+  // Special seva (utsav) selected
+  const handleSpecialSevaChange = (e) => {
+    const id = e.target.value;
+    const found = specialSevas.find((s) => (s._id || s.id) === id);
+    setSelectedSpecialSeva(found || null);
+    setSelectedSeva(null); setSelectedSevaId("");
+    setAmount(""); setBaseAmount(0);
+    setPaymentType(""); setPayNowAmount(""); setAdvance(0);
+    setBookingDate(null);
+    saveToLocalStorage({
+      selectedSpecialSevaId: id,
+      purpose: "", baseAmount: 0, amount: 0,
+      advance: 0, remainingAmount: 0, bookingDate: "", paymentType: "",
+    });
+  };
+
+  // Sub-purpose (e.g. Panchamrut, Rudrabhishek)
+  const handleSubPurposeChange = (e) => {
     const name = e.target.value;
-    setSelectedUtsav(name); setBookingDate(null); setSpecialPurpose(""); setPaymentType(""); setAmount("");
-    const found = utsavList.find((u) => u.name === name);
-    const dates = found ? (Array.isArray(found.dates) ? found.dates : (found.dates || "").split(",").map((d) => d.trim()).filter(Boolean)) : [];
-    setUtsavDates(dates);
-    saveToLocalStorage({ selectedUtsav: name, bookingDate: "", specialPurpose: "", paymentType: "", amount: 0, advance: 0, remainingAmount: 0 });
+    setSelectedSubPurpose(name);
+    setMultiDates([]); setBookingDate(null);
+
+    const sub = selectedSeva?.subPurposes?.find((s) => s.name === name);
+    const price = sub ? String(sub.amount || "") : "";
+    setPricePerDate(price);
+
+    saveToLocalStorage({
+      selectedSubPurpose: name,
+      pricePerDate: price,
+      multiDates: [], bookingDate: "",
+      amount: 0, baseAmount: 0, advance: 0, remainingAmount: 0,
+    });
   };
 
-  const handleSpecialPurposeChange = (val) => {
-    setSpecialPurpose(val); setPaymentType(""); setAmount(""); setBookingDate(null);
-    const fixedAmt = SPECIAL_AMOUNTS[val] || 0;
+  // Special event sub-purpose (Bhandara type)
+  const handleSpecialSubSevaChange = (sub) => {
+    setSelectedSeva(sub);
+    setSelectedSevaId(sub._id || sub.id || "");
+    setPaymentType(""); setPayNowAmount(""); setAdvance(0); setBookingDate(null);
+    const fixedAmt = Number(sub.amount || 0);
     setBaseAmount(fixedAmt);
-    saveToLocalStorage({ specialPurpose: val, purpose: val, baseAmount: fixedAmt, amount: fixedAmt, paymentType: "", advance: 0, remainingAmount: fixedAmt, bookingDate: "" });
-  };
-
-  const handlePurposeChange = (e) => {
-    const selectedPurpose = e.target.value;
-    const selected = regularPurposes.find((p) => p.name === selectedPurpose);
-    const fixedAmount = Number(selected?.amount ?? 0);
-    setPurpose(selectedPurpose); setBaseAmount(fixedAmount); setAmount("");
-    setBookingDate(null); setAdvance(0); setPaymentType(""); setPayNowAmount("");
-    setAbhishekGotra(""); setAbhishekType(""); setAbhishekDates([]); setPricePerDate("");
-    saveToLocalStorage({ purpose: selectedPurpose, baseAmount: fixedAmount, amount: fixedAmount, advance: 0, originalAdvance: 0, remainingAmount: fixedAmount, bookingDate: "", paymentType: "", abhishekGotra: "", abhishekType: "", abhishekDates: [], pricePerDate: "", status: "Pending" });
-  };
-
-  const handleAbhishekTypeChange = (e) => {
-    const val = e.target.value;
-    setAbhishekType(val); setAbhishekDates([]); setBaseAmount(0);
-    const found = abhishekTypes.find((a) => a.name === val);
-    const autoPrice = found ? String(found.amount) : "";
-    setPricePerDate(autoPrice);
-    saveToLocalStorage({ abhishekType: val, abhishekDates: [], pricePerDate: autoPrice, amount: 0, baseAmount: 0, advance: 0, remainingAmount: 0 });
-  };
-
-  const handleAbhishekGotraChange = (val) => {
-    setAbhishekGotra(val);
-    saveToLocalStorage({ abhishekGotra: val });
+    saveToLocalStorage({
+      purpose: sub.displayName,
+      selectedSevaId: sub._id || sub.id || "",
+      baseAmount: fixedAmt, amount: fixedAmt,
+      advance: 0, remainingAmount: fixedAmt,
+      bookingDate: "", paymentType: "",
+    });
   };
 
   const handleAmountChange = (e) => {
     const value = e.target.value;
     setAmount(value);
-    const enteredAmount = Number(value ?? 0);
-    setBaseAmount(enteredAmount);
-    saveToLocalStorage({ amount: enteredAmount, baseAmount: enteredAmount, advance: paymentType === "full" ? enteredAmount : Number(savedData.advance ?? 0), bookingDate: bookingDate ? toDBDateString(bookingDate) : "" });
+    const n = Number(value ?? 0);
+    setBaseAmount(n);
+    saveToLocalStorage({
+      amount: n, baseAmount: n,
+      advance: paymentType === "full" ? n : Number(savedData.advance ?? 0),
+      bookingDate: bookingDate ? toDBDate(bookingDate) : "",
+    });
+  };
+
+  const handleGotraChange = (val) => {
+    setGotra(val);
+    saveToLocalStorage({ gotra: val });
   };
 
   const handlePaymentTypeChange = (type) => {
@@ -551,10 +461,8 @@ export default function PurposeDropdown() {
       saveToLocalStorage({ paymentType: "full", amount: currentAmount, advance: currentAmount, remainingAmount: 0, status: "Approved" });
     }
     if (type === "advance") {
-      let advanceAmt = 0;
-      if (specialPurpose && SPECIAL_ADVANCE[specialPurpose]) { advanceAmt = SPECIAL_ADVANCE[specialPurpose]; setPayNowAmount(String(advanceAmt)); }
-      setAdvance(advanceAmt);
-      saveToLocalStorage({ paymentType: "advance", amount: currentAmount, advance: advanceAmt, originalAdvance: advanceAmt, remainingAmount: Math.max(currentAmount - advanceAmt, 0) });
+      setAdvance(0);
+      saveToLocalStorage({ paymentType: "advance", amount: currentAmount, advance: 0, originalAdvance: 0, remainingAmount: currentAmount });
     }
   };
 
@@ -575,43 +483,30 @@ export default function PurposeDropdown() {
     saveToLocalStorage({ paymentType: "advance", amount: currentAmount, advance: totalPaid, remainingAmount: Math.max(currentAmount - totalPaid, 0) });
   };
 
-  /* ==========================================
-     SAFE HIGHLIGHT DATES
-  ========================================== */
-  const safeUtsavHighlightDates = getAllUtsavDates()
-    .map((d) => safeDate(d))
-    .filter(Boolean);
+  const handleDateChange = (date) => {
+    if (!date) { setBookingDate(null); saveToLocalStorage({ bookingDate: "" }); return; }
+    setBookingDate(date);
+    saveToLocalStorage({ bookingDate: toDBDate(date) });
+  };
 
-  const safeSpecialHighlightDates = utsavDates
-    .map((d) => safeDate(d.split("T")[0]))
-    .filter((d) => {
-      if (!d) return false;
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      return d >= today;
+  const handleMultiDateToggle = (date) => {
+    if (!date) return;
+    const dateStr = toDBDate(date);
+    const exists = multiDates.some((d) => toDBDate(d) === dateStr);
+    let newDates;
+    if (exists) {
+      newDates = multiDates.filter((d) => toDBDate(d) !== dateStr);
+    } else {
+      newDates = [...multiDates, date];
+    }
+    setMultiDates(newDates);
+    const newTotal = pricePerDate ? Number(pricePerDate) * newDates.length : 0;
+    setBaseAmount(newTotal);
+    saveToLocalStorage({
+      multiDates: newDates.map(toDBDate),
+      amount: newTotal, baseAmount: newTotal,
+      advance: newTotal, remainingAmount: 0,
     });
-
-  const safeAbhishekSelected = abhishekDates.filter(Boolean);
-  const safeAbhishekBooked = getBookedAbhishekDates().filter(Boolean);
-
-  /* ==========================================
-     UTSAV NAME HELPER
-  ========================================== */
-  const getUtsavNameForDate = (date) => {
-    if (!date || !utsavList.length) return undefined;
-    // Use local date parts to avoid UTC shift
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    const dateKey = `${y}-${m}-${d}`;
-
-    const found = utsavList.find((u) => {
-      const dates = Array.isArray(u.dates)
-        ? u.dates
-        : (u.dates || "").split(",").map((d) => d.trim()).filter(Boolean);
-      return dates.some((d) => d.split("T")[0].trim() === dateKey);
-    });
-
-    return found ? found.name : undefined;
   };
 
   /* ==========================================
@@ -619,69 +514,56 @@ export default function PurposeDropdown() {
   ========================================== */
   const regularDatePickerProps = {
     selected: bookingDate,
-    onChange: handleDatePickerChange,
+    onChange: handleDateChange,
     filterDate: isDateSelectable,
     minDate: new Date(),
-    dateFormat: "dd-MM-yyyy",
-    placeholderText: bookingsLoading ? "Loading available dates..." : "Select booking date (dd-mm-yyyy)",
-    className: "pd-date-input",
-    required: true,
-    isClearable: true,
-    disabled: bookingsLoading,
-    calendarClassName: "pd-calendar",
-    highlightDates: safeUtsavHighlightDates.length > 0
-      ? [{ "react-datepicker__day--utsav-blocked": safeUtsavHighlightDates }]
-      : [],
-    renderDayContents: (day, date) => {
-      const utsavName = getUtsavNameForDate(date);
-      return (
-        <span title={utsavName || ""}>
-          {day}
-        </span>
-      );
-    },
-  };
-
-  const specialDatePickerProps = {
-    selected: bookingDate,
-    onChange: handleDatePickerChange,
-    filterDate: isSpecialDateSelectable,
     dateFormat: "dd-MM-yyyy",
     placeholderText: "Select booking date (dd-mm-yyyy)",
     className: "pd-date-input",
     required: true,
     isClearable: true,
-    disabled: !selectedUtsav || !specialPurpose || !paymentType,
     calendarClassName: "pd-calendar",
-    highlightDates: safeSpecialHighlightDates.length > 0 ? safeSpecialHighlightDates : [],
   };
 
-  const abhishekDatePickerProps = {
+  const specialDatePickerProps = {
+    selected: bookingDate,
+    onChange: handleDateChange,
+    filterDate: isSpecialDateSelectable,
+    minDate: new Date(),
+    dateFormat: "dd-MM-yyyy",
+    placeholderText: "Select booking date (dd-mm-yyyy)",
+    className: "pd-date-input",
+    required: true,
+    isClearable: true,
+    disabled: !selectedSpecialSeva || !selectedSeva || !paymentType,
+    calendarClassName: "pd-calendar",
+  };
+
+  const multiDatePickerProps = {
     selected: null,
-    onChange: handleAbhishekDateToggle,
-    filterDate: isAbhishekDateSelectable,
+    onChange: handleMultiDateToggle,
+    filterDate: isMultiDateSelectable,
     highlightDates: [
-      ...(safeAbhishekSelected.length > 0 ? [{ "react-datepicker__day--abhishek-selected": safeAbhishekSelected }] : []),
-      ...(safeAbhishekBooked.length > 0 ? [{ "react-datepicker__day--abhishek-booked": safeAbhishekBooked }] : []),
-      ...(safeUtsavHighlightDates.length > 0 ? [{ "react-datepicker__day--utsav-blocked": safeUtsavHighlightDates }] : []),
+      ...(multiDates.length > 0 ? [{ "react-datepicker__day--abhishek-selected": multiDates }] : []),
     ],
     minDate: new Date(),
     dateFormat: "dd-MM-yyyy",
-    placeholderText: "Select dates (click to add/remove)",
+    placeholderText: "Click dates to select/deselect",
     className: "pd-date-input",
     isClearable: false,
-    calendarClassName: "pd-calendar",
-    renderDayContents: (day, date) => {
-      const utsavName = getUtsavNameForDate(date);
-      return (
-        <span title={utsavName || ""}>
-          {day}
-        </span>
-      );
-    },
+    calendarClassName: "pd-calendar abhishek-calendar",
   };
 
-  const activeUtsavList = getActiveUtsavList();
+  /* ==========================================
+     LOADING
+  ========================================== */
+  if (sevaLoading) {
+    return (
+      <div className="pd-root">
+        <div className="pd-loading">Loading sevas...</div>
+      </div>
+    );
+  }
 
   /* ==========================================
      UI
@@ -689,7 +571,7 @@ export default function PurposeDropdown() {
   return (
     <div className="pd-root">
 
-      {/* ── SECTION HEADER ── */}
+      {/* SECTION HEADER */}
       <div className="pd-header">
         <div className="pd-header-icon">🪔</div>
         <div>
@@ -698,7 +580,7 @@ export default function PurposeDropdown() {
         </div>
       </div>
 
-      {/* ── EVENT TYPE SELECTOR ── */}
+      {/* EVENT TYPE BUTTONS */}
       <div className="pd-field">
         <label className="pd-label">Event Type / कार्यक्रम प्रकार</label>
         <div className="pd-event-grid">
@@ -721,259 +603,293 @@ export default function PurposeDropdown() {
         </div>
       </div>
 
-      {/* ══════════════════════
+      {/* ══════════════════════════════
           SPECIAL EVENTS
-      ══════════════════════ */}
+      ══════════════════════════════ */}
       {eventType === "special" && (
         <div className="pd-flow">
 
+          {/* Step 1: Select special seva (utsav) */}
           <div className="pd-field">
-            <label className="pd-label">Utsav / उत्सव</label>
-            <select className="pd-select" value={selectedUtsav} onChange={handleUtsavChange} disabled={isEditMode}>
-              <option value="">— Select Utsav / उत्सव निवडा —</option>
-              {activeUtsavList.map((utsav, i) => {
-                const dates = Array.isArray(utsav.dates) ? utsav.dates : (utsav.dates || "").split(",").map((d) => d.trim()).filter(Boolean);
-                const range = formatUtsavDateRange(dates);
+            <label className="pd-label">Event / उत्सव *</label>
+            <select
+              className="pd-select"
+              value={selectedSpecialSeva ? (selectedSpecialSeva._id || selectedSpecialSeva.id) : ""}
+              onChange={handleSpecialSevaChange}
+              disabled={isEditMode}
+            >
+              <option value="">— Select Event / उत्सव निवडा —</option>
+              {specialSevas.map((seva, i) => {
+                const dates = seva.specificDates || seva.dates || [];
+                const dateRange = dates.length > 0
+                  ? ` (${dates[0]} to ${dates[dates.length - 1]})`
+                  : "";
                 return (
-                  <option key={i} value={utsav.name}>
-                    {utsav.name}{range ? ` (${range})` : ""}
+                  <option key={i} value={seva._id || seva.id}>
+                    {seva.displayName}{dateRange}
                   </option>
                 );
               })}
             </select>
           </div>
 
-          {selectedUtsav && (
+          {/* Step 2: Select sub-seva under this special event */}
+          {selectedSpecialSeva && (
             <div className="pd-field">
-              <label className="pd-label">Bhandara Type / भंडारा प्रकार</label>
+              <label className="pd-label">Seva Type / सेवा प्रकार *</label>
               <div className="pd-bhandara-grid">
-                {["Full Bhandara / पूर्ण भंडारा", "Half Bhandara / अर्ध भंडारा"].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    disabled={isEditMode}
-                    onClick={() => handleSpecialPurposeChange(item)}
-                    className={`pd-bhandara-btn ${specialPurpose === item ? "pd-bhandara-btn--active" : ""}`}
-                  >
-                    <span className="pd-bhandara-icon">{item.includes("Full") ? "🍱" : "🥗"}</span>
-                    <span className="pd-bhandara-name">{item.split("/")[0].trim()}</span>
-                    <span className="pd-bhandara-amt">₹{(SPECIAL_AMOUNTS[item] || 0).toLocaleString("en-IN")}</span>
-                  </button>
-                ))}
+                {selectedSpecialSeva.subPurposes?.length > 0
+                  ? selectedSpecialSeva.subPurposes.map((sub, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={isEditMode}
+                        onClick={() => handleSpecialSubSevaChange(sub)}
+                        className={`pd-bhandara-btn ${selectedSeva?.name === sub.name ? "pd-bhandara-btn--active" : ""}`}
+                      >
+                        <span className="pd-bhandara-name">{sub.name}</span>
+                        {sub.amount > 0 && <span className="pd-bhandara-amt">₹{Number(sub.amount).toLocaleString("en-IN")}</span>}
+                      </button>
+                    ))
+                  : /* If no sub-purposes, use the special seva itself */
+                    (() => {
+                      // Auto-select the special seva directly
+                      if (!selectedSeva && selectedSpecialSeva) {
+                        setTimeout(() => handleSpecialSubSevaChange(selectedSpecialSeva), 0);
+                      }
+                      return null;
+                    })()
+                }
               </div>
             </div>
           )}
 
-          {specialPurpose && (
+          {/* Step 3: Amount display */}
+          {selectedSeva && baseAmount > 0 && (
             <div className="pd-amount-row pd-amount-row--green">
               <span className="pd-amount-row__label">Fixed Amount / निश्चित रक्कम</span>
-              <span className="pd-amount-row__value">₹{(SPECIAL_AMOUNTS[specialPurpose] || 0).toLocaleString("en-IN")}</span>
+              <span className="pd-amount-row__value">₹{baseAmount.toLocaleString("en-IN")}</span>
             </div>
           )}
 
-          {selectedUtsav && specialPurpose && !paymentType && (
+          {/* Step 4: Payment type */}
+          {selectedSeva && !paymentType && selectedSpecialSeva && (
             <div className="pd-field">
               <label className="pd-label">Payment Type / पेमेंट प्रकार</label>
               <div className="pd-pay-grid">
                 <button type="button" className="pd-pay-btn pd-pay-btn--full" onClick={() => handlePaymentTypeChange("full")}>
                   <span className="pd-pay-icon">💰</span>
                   <span className="pd-pay-title">Full Payment</span>
-                  <span className="pd-pay-sub">₹{(SPECIAL_AMOUNTS[specialPurpose] || 0).toLocaleString("en-IN")}</span>
+                  <span className="pd-pay-sub">₹{baseAmount.toLocaleString("en-IN")}</span>
                 </button>
-                <button type="button" className="pd-pay-btn pd-pay-btn--advance" onClick={() => handlePaymentTypeChange("advance")}>
-                  <span className="pd-pay-icon">📋</span>
-                  <span className="pd-pay-title">Advance Payment</span>
-                  <span className="pd-pay-sub">₹{(SPECIAL_ADVANCE[specialPurpose] || 0).toLocaleString("en-IN")} now</span>
-                </button>
+                {selectedSeva.paymentOptions === "full_advance" && (
+                  <button type="button" className="pd-pay-btn pd-pay-btn--advance" onClick={() => handlePaymentTypeChange("advance")}>
+                    <span className="pd-pay-icon">📋</span>
+                    <span className="pd-pay-title">Advance Payment</span>
+                    <span className="pd-pay-sub">Pay partial now</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {selectedUtsav && specialPurpose && paymentType && (
+          {/* Step 5: Advance amount */}
+          {selectedSeva && paymentType === "advance" && (
             <>
-              {paymentType === "advance" && (
-                <>
-                  <div className="pd-field">
-                    <label className="pd-label">Advance Amount / आगाऊ रक्कम</label>
-                    <input type="number" className="pd-input" placeholder="Enter advance amount" min="1" max={SPECIAL_AMOUNTS[specialPurpose]} value={payNowAmount} onChange={handlePayNowChange} />
-                  </div>
-                  <div className="pd-amount-row pd-amount-row--amber">
-                    <span className="pd-amount-row__label">Remaining / उर्वरित रक्कम</span>
-                    <span className="pd-amount-row__value">₹{Math.max((SPECIAL_AMOUNTS[specialPurpose] || 0) - Number(payNowAmount || 0), 0).toLocaleString("en-IN")}</span>
-                  </div>
-                </>
-              )}
-              {(paymentType === "full" || (paymentType === "advance" && Number(payNowAmount) > 0)) && (
-                <div className="pd-field">
-                  <label className="pd-label">Booking Date / बुकिंग तारीख</label>
-                  <DatePicker {...specialDatePickerProps} />
-                </div>
-              )}
+              <div className="pd-field">
+                <label className="pd-label">Advance Amount / आगाऊ रक्कम *</label>
+                <input type="number" className="pd-input" placeholder="Enter advance amount" min="1" max={baseAmount} value={payNowAmount} onChange={handlePayNowChange} />
+              </div>
+              <div className="pd-amount-row pd-amount-row--amber">
+                <span className="pd-amount-row__label">Remaining / उर्वरित रक्कम</span>
+                <span className="pd-amount-row__value">₹{Math.max(baseAmount - Number(payNowAmount || 0), 0).toLocaleString("en-IN")}</span>
+              </div>
             </>
+          )}
+
+          {/* Step 6: Booking date */}
+          {selectedSeva && paymentType && (paymentType === "full" || Number(payNowAmount) > 0) && (
+            <div className="pd-field">
+              <label className="pd-label">Booking Date / बुकिंग तारीख *</label>
+              <DatePicker {...specialDatePickerProps} />
+            </div>
           )}
         </div>
       )}
 
-      {/* ══════════════════════
+      {/* ══════════════════════════════
           REGULAR EVENTS
-      ══════════════════════ */}
+      ══════════════════════════════ */}
       {eventType === "regular" && (
         <div className="pd-flow">
 
+          {/* Select regular seva */}
           <div className="pd-field">
-            <label className="pd-label">Purpose / उद्देश</label>
-            <select className="pd-select" value={purpose} onChange={handlePurposeChange} disabled={isEditMode}
-              style={{ opacity: isEditMode ? 0.7 : 1, cursor: isEditMode ? "not-allowed" : "pointer" }}>
+            <label className="pd-label">Purpose / उद्देश *</label>
+            <select
+              className="pd-select"
+              value={selectedSevaId}
+              onChange={handleSevaChange}
+              disabled={isEditMode}
+              style={{ opacity: isEditMode ? 0.7 : 1, cursor: isEditMode ? "not-allowed" : "pointer" }}
+            >
               <option value="">— Choose Purpose / उद्देश निवडा —</option>
-              {regularPurposes.map((item, i) => (
-                <option key={i} value={item.name}>{item.name}</option>
+              {regularSevas.map((seva, i) => (
+                <option key={i} value={seva._id || seva.id}>
+                  {seva.displayName}
+                  {seva.amountType === "fixed" ? ` (₹${Number(seva.amount).toLocaleString("en-IN")})` : ""}
+                </option>
               ))}
             </select>
           </div>
 
-          {/* ── ABHISHEK ── */}
-          {isAbhishek && (
-            <div className="pd-abhishek-flow">
+          {selectedSeva && (
+            <>
+              {/* Fixed amount display — only when no sub-purposes */}
+              {selectedSeva.amountType === "fixed" && !selectedSeva.hasSubPurposes && (
+                <div className="pd-amount-row pd-amount-row--green">
+                  <span className="pd-amount-row__label">Amount / रक्कम</span>
+                  <span className="pd-amount-row__value">₹{Number(selectedSeva.amount).toLocaleString("en-IN")}</span>
+                </div>
+              )}
 
-              <div className="pd-field">
-                <label className="pd-label">Abhishek Type / अभिषेक प्रकार <span className="pd-required">*</span></label>
-                <select className="pd-select" value={abhishekType} onChange={handleAbhishekTypeChange} disabled={isEditMode}>
-                  <option value="">— Select Abhishek Type —</option>
-                  {abhishekTypes.map((item, i) => (
-                    <option key={i} value={item.name}>
-                      {item.name} — ₹{item.amount.toLocaleString("en-IN")}{item.slots ? ` (${item.slots} slots/day)` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Sub-purpose dropdown */}
+              {selectedSeva.hasSubPurposes && selectedSeva.subPurposes?.length > 0 && (
+                <div className="pd-field">
+                  <label className="pd-label">
+                    {selectedSeva.displayName} Type *
+                  </label>
+                  <select className="pd-select" value={selectedSubPurpose} onChange={handleSubPurposeChange} disabled={isEditMode}>
+                    <option value="">— Select Type —</option>
+                    {selectedSeva.subPurposes.map((sub, i) => (
+                      <option key={i} value={sub.name}>
+                        {sub.name}
+                        {sub.amount > 0 ? ` — ₹${Number(sub.amount).toLocaleString("en-IN")}` : ""}
+                        {sub.slots > 0 ? ` (${sub.slots} slots/day)` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-              {abhishekType && (
+              {/* Gotra dropdown */}
+              {selectedSeva.hasGotra && (selectedSubPurpose || !selectedSeva.hasSubPurposes) && (
+                <div className="pd-field">
+                  <label className="pd-label">Gotra / गोत्र</label>
+                  <select
+                    className="pd-select"
+                    value={ABHISHEK_GOTRAS.includes(gotra) ? gotra : gotra ? "Other" : ""}
+                    onChange={(e) => {
+                      if (e.target.value === "Other") { handleGotraChange("Other"); setGotraCustom(""); }
+                      else { handleGotraChange(e.target.value); setGotraCustom(""); }
+                    }}
+                    disabled={isEditMode}
+                  >
+                    <option value="">— Select Gotra / गोत्र निवडा —</option>
+                    {ABHISHEK_GOTRAS.map((g, i) => <option key={i} value={g}>{g}</option>)}
+                  </select>
+                  {(gotra === "Other" || (gotra && !ABHISHEK_GOTRAS.slice(0, -1).includes(gotra))) && (
+                    <input
+                      className="pd-input"
+                      style={{ marginTop: "8px" }}
+                      placeholder="Enter Gotra / गोत्र प्रविष्ट करा"
+                      value={gotraCustom}
+                      onChange={(e) => { setGotraCustom(e.target.value); handleGotraChange(e.target.value); }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Flexible amount input
+                  Show if: flexible amount AND (no sub-purposes OR sub-purpose already selected)
+                  Sub-purposes with their own amount use pricePerDate instead */}
+              {selectedSeva.amountType === "flexible" &&
+                (!selectedSeva.hasSubPurposes || (selectedSeva.hasSubPurposes && selectedSubPurpose && !(() => {
+                  const sub = selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose);
+                  return sub?.amount > 0 || sub?.isMultiDate;
+                })())) && (
                 <>
                   <div className="pd-field">
-                    <label className="pd-label">Gotra / गोत्र</label>
-                    <select
-                      className="pd-select"
-                      value={ABHISHEK_GOTRAS.includes(abhishekGotra) ? abhishekGotra : abhishekGotra ? "Other" : ""}
-                      onChange={(e) => {
-                        if (e.target.value === "Other") { handleAbhishekGotraChange("Other"); }
-                        else { handleAbhishekGotraChange(e.target.value); }
-                      }}
-                      disabled={isEditMode}
-                    >
-                      <option value="">— Select Gotra / गोत्र निवडा —</option>
-                      {ABHISHEK_GOTRAS.map((g, i) => <option key={i} value={g}>{g}</option>)}
-                    </select>
+                    <label className="pd-label">Enter Amount / रक्कम टाका *</label>
+                    <input type="number" className="pd-input" placeholder="Enter amount" min="1" value={amount} onChange={handleAmountChange} />
+                  </div>
+                  {Number(amount) > 0 && (
+                    <div className="pd-amount-row pd-amount-row--green">
+                      <span className="pd-amount-row__label">Amount / रक्कम</span>
+                      <span className="pd-amount-row__value">₹{Number(amount).toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                </>
+              )}
 
-                    {(abhishekGotra === "Other" || (abhishekGotra && !ABHISHEK_GOTRAS.slice(0, -1).includes(abhishekGotra))) && (
-                      <input
-                        className="pd-input"
-                        style={{ marginTop: "8px" }}
-                        placeholder="Enter Gotra / गोत्र प्रविष्ट करा"
-                        value={abhishekGotra === "Other" ? "" : abhishekGotra}
-                        onChange={(e) => handleAbhishekGotraChange(e.target.value)}
-                      />
-                    )}
+              {/* Multi-date selection (e.g. Abhishek) */}
+              {selectedSeva.hasSubPurposes && selectedSubPurpose && (() => {
+                const sub = selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose);
+                return sub?.isMultiDate;
+              })() && pricePerDate && (
+                <>
+                  {/* Price per date */}
+                  <div className="pd-readonly-field">
+                    <span className="pd-readonly-prefix">₹</span>
+                    <span className="pd-readonly-value">{Number(pricePerDate).toLocaleString("en-IN")}</span>
+                    <span className="pd-readonly-badge">per date</span>
                   </div>
 
+                  {/* Multi-date calendar */}
                   <div className="pd-field">
-                    <label className="pd-label">Price per Date / प्रति तारीख किंमत</label>
-                    <div className="pd-readonly-field">
-                      <span className="pd-readonly-prefix">₹</span>
-                      <span className="pd-readonly-value">{pricePerDate ? Number(pricePerDate).toLocaleString("en-IN") : "—"}</span>
-                      <span className="pd-readonly-badge">Auto-filled</span>
+                    <label className="pd-label">
+                      Select Dates / तारखा निवडा *
+                      <span className="pd-label-hint"> — click to select/deselect</span>
+                    </label>
+                    <div className="pd-calendar-wrap">
+                      <DatePicker {...multiDatePickerProps} />
                     </div>
                   </div>
 
-                  {pricePerDate && Number(pricePerDate) > 0 && (
+                  {/* Selected date tags */}
+                  {multiDates.length > 0 && (
                     <>
-                      <div className="pd-field">
-                        <label className="pd-label">
-                          Select Dates / तारखा निवडा <span className="pd-required">*</span>
-                          <span className="pd-label-hint"> — click to select/deselect</span>
-                        </label>
-                        <div className="pd-calendar-wrap">
-                          <DatePicker {...abhishekDatePickerProps} />
-                        </div>
+                      <div className="pd-date-tags">
+                        {multiDates.slice().sort((a, b) => a - b).map((date, i) => (
+                          <span key={i} className="pd-date-tag">
+                            {toDisplayDate(date)}
+                            <button className="pd-date-tag__remove" onClick={() => handleMultiDateToggle(date)}>×</button>
+                          </span>
+                        ))}
                       </div>
-
-                      {abhishekDates.length > 0 && (
-                        <>
-                          <div className="pd-date-tags">
-                            {abhishekDates.slice().sort((a, b) => a - b).map((date, i) => (
-                              <span key={i} className="pd-date-tag">
-                                {toLocalDateString(date)}
-                                <button className="pd-date-tag__remove" onClick={() => handleAbhishekDateToggle(date)}>×</button>
-                              </span>
-                            ))}
-                          </div>
-
-                          <div className="pd-amount-row pd-amount-row--green">
-                            <span className="pd-amount-row__label">
-                              Total — {abhishekDates.length} date{abhishekDates.length > 1 ? "s" : ""} × ₹{Number(pricePerDate).toLocaleString("en-IN")}
-                            </span>
-                            <span className="pd-amount-row__value">₹{abhishekTotal.toLocaleString("en-IN")}</span>
-                          </div>
-                        </>
-                      )}
+                      <div className="pd-amount-row pd-amount-row--green">
+                        <span className="pd-amount-row__label">
+                          Total — {multiDates.length} date{multiDates.length > 1 ? "s" : ""} × ₹{Number(pricePerDate).toLocaleString("en-IN")}
+                        </span>
+                        <span className="pd-amount-row__value">₹{multiDateTotal.toLocaleString("en-IN")}</span>
+                      </div>
                     </>
                   )}
                 </>
               )}
-            </div>
-          )}
 
-          {/* ── DONATION ── */}
-          {isDonation && (
-            <>
-              <div className="pd-field">
-                <label className="pd-label">Enter Amount / रक्कम टाका <span className="pd-required">*</span></label>
-                <input type="number" className="pd-input" placeholder="Enter amount" min="1" value={amount} onChange={handleAmountChange} />
-              </div>
-              {Number(amount) > 0 && (
-                <div className="pd-amount-row pd-amount-row--green">
-                  <span className="pd-amount-row__label">Amount / रक्कम</span>
-                  <span className="pd-amount-row__value">₹{Number(amount).toLocaleString("en-IN")}</span>
-                </div>
-              )}
-              <div className="pd-field">
-                <label className="pd-label">Booking Date / बुकिंग तारीख <span className="pd-required">*</span></label>
-                <DatePicker {...regularDatePickerProps} />
-              </div>
-            </>
-          )}
-
-          {/* ── FULL/HALF BHANDARA ── */}
-          {isRegularSpecial && (
-            <>
-              {baseAmount > 0 && (
-                <div className="pd-amount-row pd-amount-row--green">
-                  <span className="pd-amount-row__label">Amount / रक्कम</span>
-                  <span className="pd-amount-row__value">₹{baseAmount.toLocaleString("en-IN")}</span>
-                </div>
-              )}
-              {!paymentType && (
+              {/* Payment type buttons */}
+              {selectedSeva.amountType === "fixed" && selectedSeva.dateRule !== "none" && !paymentType && (
                 <div className="pd-field">
                   <label className="pd-label">Payment Type / पेमेंट प्रकार</label>
                   <div className="pd-pay-grid">
                     <button type="button" className="pd-pay-btn pd-pay-btn--full" onClick={() => handlePaymentTypeChange("full")}>
                       <span className="pd-pay-icon">💰</span>
                       <span className="pd-pay-title">Full Payment</span>
-                      <span className="pd-pay-sub">₹{baseAmount.toLocaleString("en-IN")}</span>
+                      <span className="pd-pay-sub">₹{Number(selectedSeva.amount).toLocaleString("en-IN")}</span>
                     </button>
-                    <button type="button" className="pd-pay-btn pd-pay-btn--advance" onClick={() => handlePaymentTypeChange("advance")}>
-                      <span className="pd-pay-icon">📋</span>
-                      <span className="pd-pay-title">Advance Payment</span>
-                      <span className="pd-pay-sub">Pay partial now</span>
-                    </button>
+                    {selectedSeva.paymentOptions === "full_advance" && (
+                      <button type="button" className="pd-pay-btn pd-pay-btn--advance" onClick={() => handlePaymentTypeChange("advance")}>
+                        <span className="pd-pay-icon">📋</span>
+                        <span className="pd-pay-title">Advance Payment</span>
+                        <span className="pd-pay-sub">Pay partial now</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
-              {paymentType === "full" && (
-                <div className="pd-field">
-                  <label className="pd-label">Booking Date / बुकिंग तारीख <span className="pd-required">*</span></label>
-                  <DatePicker {...regularDatePickerProps} />
-                </div>
-              )}
+
+              {/* Advance payment input */}
               {paymentType === "advance" && (
                 <>
                   {isEditMode && (
@@ -983,48 +899,47 @@ export default function PurposeDropdown() {
                     </div>
                   )}
                   <div className="pd-field">
-                    <label className="pd-label">Pay Now / आता भरा <span className="pd-required">*</span></label>
+                    <label className="pd-label">Pay Now / आता भरा *</label>
                     <input type="number" className="pd-input" placeholder="Enter amount to pay now" min="1" max={currentRemainingAmount} value={payNowAmount} onChange={handlePayNowChange} />
                   </div>
                   <div className="pd-amount-row pd-amount-row--amber">
                     <span className="pd-amount-row__label">Remaining / उर्वरित रक्कम</span>
                     <span className="pd-amount-row__value">₹{remainingAmount.toLocaleString("en-IN")}</span>
                   </div>
-                  <div className="pd-field">
-                    <label className="pd-label">Booking Date / बुकिंग तारीख <span className="pd-required">*</span></label>
-                    <DatePicker {...regularDatePickerProps} />
-                  </div>
                 </>
+              )}
+
+              {/* No date badge */}
+              {selectedSeva.dateRule === "none" && (
+                <div className="pd-badge pd-badge--green">
+                  ✅ Amount: ₹{Number(selectedSeva.amount || 0).toLocaleString("en-IN")} — No date selection required
+                </div>
+              )}
+
+              {/* Single booking date — shown when:
+                  - dateRule is not "none"
+                  - no sub-purposes (sub-purpose multi-date handles its own calendar)
+                  - amount is ready (flexible: user entered amount, fixed: always ready)
+                  - payment type is selected (if full_advance) or not needed (if full only)
+              */}
+              {selectedSeva.dateRule !== "none" && !selectedSeva.hasSubPurposes && (() => {
+                // flexible — need amount entered
+                if (selectedSeva.amountType === "flexible") return Number(amount) > 0;
+                // fixed + full only — show immediately
+                if (selectedSeva.paymentOptions === "full") return true;
+                // fixed + full_advance — need payment type selected
+                if (selectedSeva.paymentOptions === "full_advance") {
+                  return paymentType === "full" || (paymentType === "advance" && Number(payNowAmount) > 0);
+                }
+                return true;
+              })() && (
+                <div className="pd-field">
+                  <label className="pd-label">Booking Date / बुकिंग तारीख *</label>
+                  <DatePicker {...regularDatePickerProps} />
+                </div>
               )}
             </>
           )}
-
-          {/* ── SHIRAPASAD ── */}
-          {isShirapasad && (
-            <>
-              <div className="pd-badge pd-badge--green">✅ Full Payment Only — ₹5,001</div>
-              <div className="pd-field">
-                <label className="pd-label">Booking Date / बुकिंग तारीख <span className="pd-required">*</span></label>
-                <DatePicker {...regularDatePickerProps} />
-              </div>
-            </>
-          )}
-
-          {/* ── VIDAPRASAD ── */}
-          {isVidaprasad && (
-            <div className="pd-field">
-              <label className="pd-label">Booking Date / बुकिंग तारीख <span className="pd-required">*</span></label>
-              <DatePicker {...regularDatePickerProps} />
-            </div>
-          )}
-
-          {/* ── NO CALENDAR PURPOSES ── */}
-          {isNoCalendar && (
-            <div className="pd-badge pd-badge--green">
-              ✅ Amount: ₹{baseAmount.toLocaleString("en-IN")} — No date selection required
-            </div>
-          )}
-
         </div>
       )}
     </div>

@@ -1,0 +1,295 @@
+/* ============================================================
+   ADD SEVA PAGE
+============================================================ */
+
+/* ── Progress Bar ── */
+.as-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.as-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  position: relative;
+}
+
+.as-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: 60%;
+  width: 80%;
+  height: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.as-step--done:not(:last-child)::after {
+  background: #f97316;
+}
+
+.as-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9ca3af;
+  position: relative;
+  z-index: 1;
+}
+
+.as-step--active .as-step-circle {
+  background: #f97316;
+  border-color: #f97316;
+  color: #fff;
+}
+
+.as-step--done .as-step-circle {
+  background: #f97316;
+  border-color: #f97316;
+  color: #fff;
+}
+
+.as-step-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.as-step--active .as-step-label { color: #f97316; }
+.as-step--done .as-step-label { color: #374151; }
+
+/* ── Card ── */
+.as-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.as-step-body { max-width: 640px; }
+
+.as-step-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.as-step-desc {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 20px;
+}
+
+/* ── Event Type / Amount Type Buttons ── */
+.as-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.as-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.as-type-btn:hover {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.as-type-btn--active {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+
+.as-type-icon { font-size: 24px; }
+.as-type-title { font-size: 15px; font-weight: 700; color: #111827; }
+.as-type-sub { font-size: 12px; color: #f97316; font-weight: 600; }
+.as-type-hint { font-size: 12px; color: #9ca3af; line-height: 1.4; }
+
+/* ── Field ── */
+.as-field { margin-bottom: 16px; }
+.as-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+.as-label-hint { font-weight: 400; color: #9ca3af; margin-left: 4px; }
+
+/* ── Preview key ── */
+.as-preview-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.as-preview-key__label { font-size: 12px; color: #15803d; font-weight: 600; }
+.as-preview-key__value { font-family: monospace; font-size: 13px; color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 4px; }
+.as-preview-key__hint { font-size: 11px; color: #9ca3af; }
+
+/* ── Toggle row ── */
+.as-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+.as-toggle-title { font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 2px; }
+.as-toggle-desc { font-size: 12px; color: #9ca3af; margin: 0; }
+
+/* ── Switch ── */
+.as-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.as-switch input { opacity: 0; width: 0; height: 0; }
+.as-switch-slider {
+  position: absolute; inset: 0;
+  background: #d1d5db; border-radius: 24px; cursor: pointer; transition: 0.2s;
+}
+.as-switch-slider::before {
+  content: ""; position: absolute;
+  width: 18px; height: 18px; left: 3px; bottom: 3px;
+  background: #fff; border-radius: 50%; transition: 0.2s;
+}
+.as-switch input:checked + .as-switch-slider { background: #f97316; }
+.as-switch input:checked + .as-switch-slider::before { transform: translateX(20px); }
+
+/* ── Sub-purpose rows ── */
+.as-sub-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding: 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+.as-sub-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #f97316; color: #fff;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 8px;
+}
+.as-sub-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.as-sub-remove {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #fee2e2; color: #dc2626;
+  border: none; font-size: 16px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 8px;
+}
+.as-check-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #374151; cursor: pointer;
+}
+.as-add-sub-btn {
+  width: 100%; padding: 10px; border: 2px dashed #f97316;
+  background: #fff7ed; color: #f97316; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: 0.2s; font-family: inherit;
+}
+.as-add-sub-btn:hover { background: #ffedd5; }
+
+/* ── Info box ── */
+.as-info-box {
+  padding: 14px 16px; background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 10px; font-size: 14px; color: #1d4ed8;
+}
+
+/* ── Date rule list ── */
+.as-date-rule-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.as-date-rule-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 10px;
+  border: 2px solid #e5e7eb; background: #f9fafb;
+  cursor: pointer; text-align: left; transition: 0.2s; font-family: inherit;
+}
+.as-date-rule-btn:hover { border-color: #f97316; background: #fff7ed; }
+.as-date-rule-btn--active { border-color: #f97316; background: #fff7ed; }
+.as-date-rule-icon { font-size: 20px; }
+.as-date-rule-title { font-size: 14px; font-weight: 700; color: #111827; margin: 0 0 2px; }
+.as-date-rule-mr { font-size: 12px; color: #9ca3af; margin: 0; }
+
+/* ── Date tags ── */
+.as-date-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.as-date-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff7ed; border: 1px solid #f97316;
+  color: #f97316; border-radius: 8px; padding: 4px 10px;
+  font-size: 13px; font-weight: 600;
+}
+.as-date-tag button {
+  background: none; border: none; color: #f97316;
+  cursor: pointer; font-weight: 700; font-size: 14px; padding: 0; line-height: 1;
+}
+
+/* ── Nav buttons ── */
+.as-nav { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f3f4f6; }
+
+/* ── Existing seva list ── */
+.as-list-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 16px; }
+.as-seva-list { display: flex; flex-direction: column; gap: 10px; }
+.as-seva-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f9fafb;
+}
+.as-seva-info { flex: 1; }
+.as-seva-badge {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  color: #f97316; background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 6px; padding: 2px 8px; margin-bottom: 6px;
+}
+.as-seva-name { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 4px; }
+.as-seva-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: #6b7280; }
+.as-seva-delete {
+  background: #fee2e2; color: #dc2626; border: none;
+  border-radius: 8px; padding: 6px 14px;
+  font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: 0.2s; margin-left: 12px;
+}
+.as-seva-delete:hover { background: #dc2626; color: #fff; }
+
+@media (max-width: 768px) {
+  .as-type-grid { grid-template-columns: 1fr; }
+  .as-progress { gap: 0; }
+  .as-step-label { font-size: 10px; }
+}

@@ -6,12 +6,13 @@ import DevoteeForm from "../components/DevoteeForm";
 import PurposeDropdown from "../components/PurposeDropdown";
 import apiRequest from "../services/api";
 
-/* Bank options with icons */
+/* Bank options — no Cash */
 const ALL_BANKS = [
   { id: "ICICI Bank", label: "ICICI", icon: "🏦" },
-  { id: "BCCB Bank", label: "BCCB",  icon: "🏛️" },
-  { id: "SBI Bank",  label: "SBI",   icon: "🏧" },
-  { id: "Cash",      label: "Cash",  icon: "💵", isCash: true },
+  { id: "BCCB Bank",  label: "BCCB",  icon: "🏛️" },
+  { id: "SBI Bank",   label: "SBI",   icon: "🏧" },
+  { id: "Cash",       label: "Cash",  icon: "💵", isCash: true },
+  { id: "Cheque",     label: "Cheque",icon: "📝", isCheque: true },
 ];
 
 export default function TaxReceipt() {
@@ -20,15 +21,18 @@ export default function TaxReceipt() {
   const [is80G, setIs80G] = useState(false);
   const [selectedBank, setSelectedBank] = useState("");
   const [panCard, setPanCard] = useState("");
-  const [cashAmount, setCashAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* Banks shown: all 4 always visible; SBI only when 80G */
+  // Cheque fields
+  const [payingBankName, setPayingBankName] = useState("");
+  const [chequeNumber, setChequeNumber] = useState("");
+  const [chequeDate, setChequeDate] = useState("");
+
   const visibleBanks = is80G
     ? ALL_BANKS
     : ALL_BANKS.filter((b) => b.id !== "SBI Bank");
 
-  const isCashSelected = selectedBank === "Cash";
+  const isChequeSelected = selectedBank === "Cheque";
 
   const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
   const normalizePurpose = (p = "") => String(p).split("/")[0].trim().toLowerCase();
@@ -43,12 +47,12 @@ export default function TaxReceipt() {
       setLoading(true);
       const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
 
-      if (!savedForm.name?.trim())          { alert("Please enter devotee name"); return; }
-      if (!validateName(savedForm.name))    { alert("Name should contain only letters and spaces."); return; }
-      if (!savedForm.phone?.trim())         { alert("Please enter phone number"); return; }
-      if (!validatePhone(savedForm.phone))  { alert("Enter a valid 10-digit mobile number."); return; }
+      if (!savedForm.name?.trim())         { alert("Please enter devotee name"); return; }
+      if (!validateName(savedForm.name))   { alert("Name should contain only letters and spaces."); return; }
+      if (!savedForm.phone?.trim())        { alert("Please enter phone number"); return; }
+      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
       if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
-      if (!savedForm.purpose?.trim())       { alert("Please select purpose"); return; }
+      if (!savedForm.purpose?.trim())      { alert("Please select purpose"); return; }
 
       const noCalendarPurposes = [
         "Two Wheeler / दुचाकी (₹251)",
@@ -58,33 +62,30 @@ export default function TaxReceipt() {
       ];
 
       if (savedForm.purpose === "Abhishek / अभिषेक") {
-        if (!savedForm.abhishekType?.trim()) { alert("Please select Abhishek type"); return; }
+        if (!savedForm.abhishekType?.trim())  { alert("Please select Abhishek type"); return; }
         if (!savedForm.abhishekGotra?.trim()) { alert("Please select or enter Gotra"); return; }
         if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { alert("Please enter price per date"); return; }
-        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) {
-          alert("Please select at least one date for Abhishek");
-          return;
-        }
-      } else if (!noCalendarPurposes.includes(savedForm.purpose) &&
-                 savedForm.purpose !== "Abhishek / अभिषेक" &&
-                 !savedForm.bookingDate) {
-        alert("Please select booking date");
-        return;
+        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) { alert("Please select at least one date for Abhishek"); return; }
+      } else if (!noCalendarPurposes.includes(savedForm.purpose) && !savedForm.bookingDate) {
+        alert("Please select booking date"); return;
       }
 
       const bookingDate = new Date(savedForm.bookingDate);
-      const today = new Date(); today.setHours(0,0,0,0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
       if (bookingDate < today) { alert("Past dates are not allowed."); return; }
 
       if (!selectedBank) { alert("Please select a payment method"); return; }
 
-      if (isCashSelected && (!cashAmount || Number(cashAmount) <= 0)) {
-        alert("Please enter cash amount"); return;
+      // Cheque validation
+      if (isChequeSelected) {
+        if (!payingBankName.trim()) { alert("Please enter paying bank name"); return; }
+        if (!chequeNumber.trim())   { alert("Please enter cheque number"); return; }
+        if (!chequeDate)            { alert("Please enter cheque date"); return; }
       }
 
       if (is80G) {
-        if (!panCard.trim())         { alert("Please enter PAN card number for 80G"); return; }
-        if (!validatePan(panCard))   { alert("Please enter a valid PAN card (e.g. ABCDE1234F)"); return; }
+        if (!panCard.trim())       { alert("Please enter PAN card number for 80G"); return; }
+        if (!validatePan(panCard)) { alert("Please enter a valid PAN card (e.g. ABCDE1234F)"); return; }
       }
 
       const amount = Number(savedForm.amount || 0);
@@ -120,10 +121,13 @@ export default function TaxReceipt() {
           amount, advance, paidAmount: advance, remainingAmount,
           paymentType, status,
           receiptType: "Tax",
-          bank: isCashSelected ? "Cash" : selectedBank,
+          bank: selectedBank,
           is80G,
           panCard: is80G ? panCard.trim().toUpperCase() : "",
-          cashAmount: isCashSelected ? Number(cashAmount) : 0,
+          // Cheque details — only sent when Cheque selected
+          payingBankName: isChequeSelected ? payingBankName.trim() : "",
+          chequeNumber:   isChequeSelected ? chequeNumber.trim() : "",
+          chequeDate:     isChequeSelected ? chequeDate : "",
           reason: savedForm.reason || "",
         }),
       });
@@ -197,7 +201,7 @@ export default function TaxReceipt() {
               </div>
             </label>
 
-            {/* BANK / PAYMENT METHOD PILLS */}
+            {/* PAYMENT METHOD PILLS — no Cash, Cheque added */}
             <div className="tr-field">
               <label className="tr-bank-label">Payment Method / पेमेंट पद्धत</label>
               <div className="tr-bank-options">
@@ -205,10 +209,15 @@ export default function TaxReceipt() {
                   <button
                     key={bank.id}
                     type="button"
-                    className={`tr-bank-pill${bank.isCash ? " tr-cash-pill" : ""}${selectedBank === bank.id ? " tr-bank-active" : ""}`}
+                    className={`tr-bank-pill${bank.isCheque ? " tr-cheque-pill" : ""}${selectedBank === bank.id ? " tr-bank-active" : ""}`}
                     onClick={() => {
                       setSelectedBank(bank.id);
-                      if (!bank.isCash) setCashAmount("");
+                      // Clear cheque fields if switching away from cheque
+                      if (!bank.isCheque) {
+                        setPayingBankName("");
+                        setChequeNumber("");
+                        setChequeDate("");
+                      }
                     }}
                   >
                     <span className="tr-bank-icon">{bank.icon}</span>
@@ -218,18 +227,43 @@ export default function TaxReceipt() {
               </div>
             </div>
 
-            {/* CASH AMOUNT — only when Cash selected */}
-            {isCashSelected && (
-              <div className="tr-cash-box">
-                <label className="tr-cash-box-label">💵 Cash Amount / रोख रक्कम *</label>
-                <input
-                  type="number"
-                  className="tr-cash-input"
-                  placeholder="Enter cash amount"
-                  min="1"
-                  value={cashAmount}
-                  onChange={(e) => setCashAmount(e.target.value)}
-                />
+            {/* CHEQUE FIELDS — only when Cheque selected */}
+            {isChequeSelected && (
+              <div className="tr-cheque-box">
+                <p className="tr-cheque-title">📝 Cheque Details / चेक तपशील</p>
+
+                <div className="tr-cheque-field">
+                  <label className="tr-bank-label">Paying Bank Name / बँकेचे नाव *</label>
+                  <input
+                    className="input"
+                    placeholder="e.g. State Bank of India"
+                    value={payingBankName}
+                    onChange={(e) => setPayingBankName(e.target.value)}
+                  />
+                </div>
+
+                <div className="tr-cheque-field">
+                  <label className="tr-bank-label">Cheque Number / चेक नंबर *</label>
+                  <input
+                    className="input"
+                    placeholder="e.g. 123456"
+                    value={chequeNumber}
+                    onChange={(e) =>
+                      setChequeNumber(e.target.value.replace(/[^0-9]/g, ""))
+                    }
+                    maxLength={6}
+                  />
+                </div>
+
+                <div className="tr-cheque-field">
+                  <label className="tr-bank-label">Cheque Date / चेक तारीख *</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={chequeDate}
+                    onChange={(e) => setChequeDate(e.target.value)}
+                  />
+                </div>
               </div>
             )}
 
@@ -282,18 +316,10 @@ export default function TaxReceipt() {
 
         {/* ACTION BUTTONS */}
         <div className="tr-actions">
-          <button
-            className="secondary-btn"
-            onClick={() => router.push("/new-booking")}
-            disabled={loading}
-          >
+          <button className="secondary-btn" onClick={() => router.push("/new-booking")} disabled={loading}>
             ← Back / मागे
           </button>
-          <button
-            className="primary-btn"
-            onClick={handleCreateBooking}
-            disabled={loading}
-          >
+          <button className="primary-btn" onClick={handleCreateBooking} disabled={loading}>
             {loading ? "Creating..." : "Create Booking / बुकिंग करा ✓"}
           </button>
         </div>

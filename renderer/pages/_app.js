@@ -25,6 +25,7 @@ import "../styles/success.css";
 import "../styles/print.css"; 
 import "../styles/print.css"; // ✅ ADD THIS 
 import "../styles/dashboard-details.css";
+import "../styles/add-seva.css";
 
 export default function App({ Component, pageProps }) {
   return <Component {...pageProps} />;
