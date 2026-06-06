@@ -175,9 +175,9 @@ export default function PurposeDropdown() {
   const remainingAmount = Math.max(baseAmount - Number(savedData.advance ?? 0), 0);
   const currentRemainingAmount = Math.max(baseAmount - previousPaidAmount, 0);
 
-  // Split sevas by event type
-  const specialSevas = sevaList.filter((s) => s.eventType === "special");
-  const regularSevas = sevaList.filter((s) => s.eventType === "regular");
+  // Split sevas by event type — only show active sevas
+  const specialSevas = sevaList.filter((s) => s.eventType === "special" && s.isActive !== false);
+  const regularSevas = sevaList.filter((s) => s.eventType === "regular" && s.isActive !== false);
 
   // Multi-date total
   const multiDateTotal = pricePerDate && multiDates.length
@@ -218,13 +218,15 @@ export default function PurposeDropdown() {
     const dateKey = toDBDate(selected);
     const dayOfWeek = selected.getDay();
 
-    // Block all special seva specific dates from regular booking
-    const allSpecialDates = specialSevas.flatMap((s) =>
-      (s.specificDates || s.dates || []).map((d) =>
-        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
-      )
-    );
-    if (allSpecialDates.includes(dateKey)) return false;
+    // Block special seva dates only if this seva has blockOnSpecialDates = true
+    if (selectedSeva?.blockOnSpecialDates) {
+      const allSpecialDates = specialSevas.flatMap((s) =>
+        (s.specificDates || s.dates || []).map((d) =>
+          typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
+        )
+      );
+      if (allSpecialDates.includes(dateKey)) return false;
+    }
 
     // Day restrictions
     if (dateRule === "thursday" && dayOfWeek !== 4) return false;
@@ -309,13 +311,15 @@ export default function PurposeDropdown() {
 
     const dateKey = toDBDate(selected);
 
-    // Block special seva dates
-    const allSpecialDates = specialSevas.flatMap((s) =>
-      (s.specificDates || s.dates || []).map((d) =>
-        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
-      )
-    );
-    if (allSpecialDates.includes(dateKey)) return false;
+    // Block special seva dates only if blockOnSpecialDates = true
+    if (selectedSeva?.blockOnSpecialDates) {
+      const allSpecialDates = specialSevas.flatMap((s) =>
+        (s.specificDates || s.dates || []).map((d) =>
+          typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)
+        )
+      );
+      if (allSpecialDates.includes(dateKey)) return false;
+    }
 
     // Check sub-purpose slot availability
     if (selectedSubPurpose && selectedSeva.subPurposes) {
@@ -510,6 +514,20 @@ export default function PurposeDropdown() {
   };
 
   /* ==========================================
+     TOOLTIP HELPER — returns special event name for a date
+  ========================================== */
+  const getSpecialEventNameForDate = useCallback((date) => {
+    if (!date) return null;
+    const dateKey = toDBDate(new Date(date));
+    const found = specialSevas.find((s) =>
+      (s.specificDates || s.dates || []).some((d) =>
+        (typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)) === dateKey
+      )
+    );
+    return found ? found.displayName : null;
+  }, [specialSevas]);
+
+  /* ==========================================
      DATE PICKER PROPS
   ========================================== */
   const regularDatePickerProps = {
@@ -523,6 +541,18 @@ export default function PurposeDropdown() {
     required: true,
     isClearable: true,
     calendarClassName: "pd-calendar",
+    // Tooltip: show special event name on blocked dates
+    renderDayContents: (day, date) => {
+      const specialName = getSpecialEventNameForDate(date);
+      return (
+        <span
+          title={specialName ? `🚫 ${specialName} — Date reserved for special event` : ""}
+          style={{ display: "block", width: "100%", height: "100%" }}
+        >
+          {day}
+        </span>
+      );
+    },
   };
 
   const specialDatePickerProps = {
@@ -552,6 +582,17 @@ export default function PurposeDropdown() {
     className: "pd-date-input",
     isClearable: false,
     calendarClassName: "pd-calendar abhishek-calendar",
+    renderDayContents: (day, date) => {
+      const specialName = getSpecialEventNameForDate(date);
+      return (
+        <span
+          title={specialName ? `🚫 ${specialName} — Date reserved for special event` : ""}
+          style={{ display: "block", width: "100%", height: "100%" }}
+        >
+          {day}
+        </span>
+      );
+    },
   };
 
   /* ==========================================
@@ -869,7 +910,8 @@ export default function PurposeDropdown() {
               )}
 
               {/* Payment type buttons */}
-              {selectedSeva.amountType === "fixed" && selectedSeva.dateRule !== "none" && !paymentType && (
+              {selectedSeva.amountType === "fixed" && selectedSeva.dateRule !== "none" && !paymentType &&
+                (!selectedSeva.hasSubPurposes || selectedSubPurpose) && (
                 <div className="pd-field">
                   <label className="pd-label">Payment Type / पेमेंट प्रकार</label>
                   <div className="pd-pay-grid">
@@ -916,15 +958,16 @@ export default function PurposeDropdown() {
                 </div>
               )}
 
-              {/* Single booking date — shown when:
-                  - dateRule is not "none"
-                  - no sub-purposes (sub-purpose multi-date handles its own calendar)
-                  - amount is ready (flexible: user entered amount, fixed: always ready)
-                  - payment type is selected (if full_advance) or not needed (if full only)
-              */}
-              {selectedSeva.dateRule !== "none" && !selectedSeva.hasSubPurposes && (() => {
-                // flexible — need amount entered
-                if (selectedSeva.amountType === "flexible") return Number(amount) > 0;
+              {/* Single booking date */}
+              {selectedSeva.dateRule !== "none" && (() => {
+                // If seva has sub-purposes, wait for sub-purpose to be selected
+                if (selectedSeva.hasSubPurposes) {
+                  if (!selectedSubPurpose) return false;
+                  const sub = selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose);
+                  if (sub?.isMultiDate) return false; // multi-date calendar shown above
+                }
+                // flexible amount — show calendar immediately
+                if (selectedSeva.amountType === "flexible") return true;
                 // fixed + full only — show immediately
                 if (selectedSeva.paymentOptions === "full") return true;
                 // fixed + full_advance — need payment type selected

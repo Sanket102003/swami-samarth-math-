@@ -54,6 +54,8 @@ function AddSeva() {
   const [sevaLoading, setSevaLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [isActive, setIsActive] = useState(true); // admin can disable seva from booking
+  const [blockOnSpecialDates, setBlockOnSpecialDates] = useState(false); // block this seva on special event dates
 
   /* ============================================================
      LOAD EXISTING SEVA LIST
@@ -95,6 +97,7 @@ function AddSeva() {
     setHasSubPurposes(false); setHasGotra(false);
     setSubPurposes([{ name: "", amount: "", slots: "", isMultiDate: false }]);
     setPaymentOptions(""); setDateRule(""); setSpecificDates([]); setMaxPerDate("");
+    setIsActive(true); setBlockOnSpecialDates(false);
   };
 
   /* ============================================================
@@ -201,6 +204,7 @@ function AddSeva() {
           ? specificDates.map(toDBDate).sort().join(",")
           : "",
         maxPerDate: maxPerDate ? Number(maxPerDate) : 0,
+        blockOnSpecialDates: eventType === "regular" ? blockOnSpecialDates : false,
         createdAt: new Date(),
       };
 
@@ -220,6 +224,25 @@ function AddSeva() {
       alert(err.message || "Failed to save seva");
     } finally {
       setSaving(false);
+    }
+  };
+
+  /* ============================================================
+     TOGGLE ACTIVE / INACTIVE
+  ============================================================ */
+  const handleToggleActive = async (id, currentActive) => {
+    try {
+      const newActive = currentActive === false ? true : false;
+      await apiRequest("/toggle_seva_active", {
+        method: "POST",
+        body: JSON.stringify({ id, isActive: newActive }),
+      });
+      setSevaList(sevaList.map((s) =>
+        (s._id || s.id) === id ? { ...s, isActive: newActive } : s
+      ));
+      showToast(newActive ? "✅ Seva activated" : "🚫 Seva deactivated");
+    } catch (err) {
+      alert(err.message || "Failed to update seva");
     }
   };
 
@@ -579,6 +602,27 @@ function AddSeva() {
                 </div>
               )}
 
+              {/* Block on Special Event Dates toggle — only for regular events */}
+              {eventType === "regular" && dateRule && dateRule !== "none" && (
+                <div className="as-toggle-row" style={{ marginTop: "16px" }}>
+                  <div>
+                    <p className="as-toggle-title">🚫 Block on Special Event Dates</p>
+                    <p className="as-toggle-desc">
+                      If ON, users cannot book this seva on dates reserved for special events
+                      (e.g. Ram Navami, Diwali Utsav dates)
+                    </p>
+                  </div>
+                  <label className="as-switch">
+                    <input
+                      type="checkbox"
+                      checked={blockOnSpecialDates}
+                      onChange={(e) => setBlockOnSpecialDates(e.target.checked)}
+                    />
+                    <span className="as-switch-slider" />
+                  </label>
+                </div>
+              )}
+
               {/* Max per date — not for "none" rule */}
               {dateRule && dateRule !== "none" && (
                 <div className="as-field" style={{ marginTop: "16px" }}>
@@ -673,14 +717,34 @@ function AddSeva() {
                         <span>{DATE_RULES.find((r) => r.key === seva.dateRule)?.label || seva.dateRule}</span>
                         {seva.maxPerDate > 0 && <><span>·</span><span>Max {seva.maxPerDate}/date</span></>}
                         {seva.hasSubPurposes && <><span>·</span><span>{seva.subPurposes?.length || 0} sub-purposes</span></>}
+                        <span>·</span>
+                        <span style={{ color: seva.isActive === false ? "#dc2626" : "#16a34a", fontWeight: 700 }}>
+                          {seva.isActive === false ? "🚫 Inactive" : "✅ Active"}
+                        </span>
+                        {seva.blockOnSpecialDates && <><span>·</span><span style={{ color: "#f97316", fontWeight: 600 }}>🚫 Blocked on special dates</span></>}
                       </div>
                     </div>
-                    <button
-                      className="as-seva-delete"
-                      onClick={() => handleDelete(id)}
-                    >
-                      Delete
-                    </button>
+                    <div style={{ display: "flex", gap: "8px", flexShrink: 0, marginLeft: "12px" }}>
+                      <button
+                        style={{
+                          background: seva.isActive === false ? "#f0fdf4" : "#fff7ed",
+                          color: seva.isActive === false ? "#16a34a" : "#f97316",
+                          border: `1px solid ${seva.isActive === false ? "#bbf7d0" : "#fed7aa"}`,
+                          borderRadius: "8px", padding: "6px 12px",
+                          fontSize: "12px", fontWeight: "600", cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                        onClick={() => handleToggleActive(id, seva.isActive)}
+                      >
+                        {seva.isActive === false ? "Activate" : "Deactivate"}
+                      </button>
+                      <button
+                        className="as-seva-delete"
+                        onClick={() => handleDelete(id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 );
               })}
