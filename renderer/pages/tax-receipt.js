@@ -235,7 +235,7 @@ export default function TaxReceipt() {
                 <div className="tr-cheque-field">
                   <label className="tr-bank-label">Paying Bank Name / बँकेचे नाव *</label>
                   <input
-                    className="input"
+                    className="tr-cheque-input"
                     placeholder="e.g. State Bank of India"
                     value={payingBankName}
                     onChange={(e) => setPayingBankName(e.target.value)}
@@ -245,7 +245,7 @@ export default function TaxReceipt() {
                 <div className="tr-cheque-field">
                   <label className="tr-bank-label">Cheque Number / चेक नंबर *</label>
                   <input
-                    className="input"
+                    className="tr-cheque-input"
                     placeholder="e.g. 123456"
                     value={chequeNumber}
                     onChange={(e) =>
@@ -259,7 +259,7 @@ export default function TaxReceipt() {
                   <label className="tr-bank-label">Cheque Date / चेक तारीख *</label>
                   <input
                     type="date"
-                    className="input"
+                    className="tr-cheque-input"
                     value={chequeDate}
                     onChange={(e) => setChequeDate(e.target.value)}
                   />

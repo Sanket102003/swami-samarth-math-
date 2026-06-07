@@ -530,6 +530,20 @@ export default function PurposeDropdown() {
   /* ==========================================
      DATE PICKER PROPS
   ========================================== */
+  
+
+  // Get all special event dates — only used when blockOnSpecialDates is true
+  const blockedSpecialDates = selectedSeva?.blockOnSpecialDates
+    ? specialSevas
+        .flatMap((s) =>
+          (s.specificDates || s.dates || []).map((d) =>
+            safeDate(typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d))
+          )
+        )
+        .filter(Boolean)
+    : [];
+
+  // Merge highlightDates into regular picker (blocked special dates)
   const regularDatePickerProps = {
     selected: bookingDate,
     onChange: handleDateChange,
@@ -541,12 +555,17 @@ export default function PurposeDropdown() {
     required: true,
     isClearable: true,
     calendarClassName: "pd-calendar",
-    // Tooltip: show special event name on blocked dates
+    highlightDates: blockedSpecialDates.length > 0
+      ? [{ "react-datepicker__day--utsav-blocked": blockedSpecialDates }]
+      : [],
+    // Tooltip: show special event name on blocked dates (only when seva blocks special dates)
     renderDayContents: (day, date) => {
       const specialName = getSpecialEventNameForDate(date);
       return (
         <span
-          title={specialName ? `🚫 ${specialName} — Date reserved for special event` : ""}
+          title={specialName && selectedSeva?.blockOnSpecialDates
+            ? `🚫 ${specialName} — Date reserved for special event`
+            : ""}
           style={{ display: "block", width: "100%", height: "100%" }}
         >
           {day}
@@ -554,6 +573,13 @@ export default function PurposeDropdown() {
       );
     },
   };
+
+  // Get the allowed dates for the selected special seva
+  const specialSevaHighlightDates = selectedSpecialSeva
+    ? (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || [])
+        .map((d) => safeDate(typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)))
+        .filter(Boolean)
+    : [];
 
   const specialDatePickerProps = {
     selected: bookingDate,
@@ -567,6 +593,9 @@ export default function PurposeDropdown() {
     isClearable: true,
     disabled: !selectedSpecialSeva || !selectedSeva || !paymentType,
     calendarClassName: "pd-calendar",
+    highlightDates: specialSevaHighlightDates.length > 0
+      ? [{ "react-datepicker__day--highlighted": specialSevaHighlightDates }]
+      : [],
   };
 
   const multiDatePickerProps = {

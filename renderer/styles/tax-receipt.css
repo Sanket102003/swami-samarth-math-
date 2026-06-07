@@ -449,3 +449,69 @@
   left: 2px;
   top: -1px;
 }
+
+/* ── CHEQUE BOX ── */
+.tr-cheque-box {
+  background: #f8f7ff;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tr-cheque-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5b21b6;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tr-cheque-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tr-cheque-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #c4b5fd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  background: #fff;
+  color: #111827;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.tr-cheque-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.tr-cheque-input::placeholder {
+  color: #d1d5db;
+  font-weight: 400;
+}
+
+/* Cheque pill active color — purple */
+.tr-bank-pill.tr-cheque-pill:hover {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.tr-bank-pill.tr-cheque-pill.tr-bank-active {
+  border-color: #7c3aed;
+  background: #7c3aed;
+  color: #fff;
+}
