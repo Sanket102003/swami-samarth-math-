@@ -1,5 +1,5 @@
 const BASE_URL =
-  "https://qhillstech.wixstudio.com/my-site-54/_functions";
+  "https://www.swamisamrathbhuigaon.com/_functions";
 
 async function apiRequest(endpoint, options = {}) {
   const token =
