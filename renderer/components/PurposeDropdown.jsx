@@ -266,17 +266,16 @@ export default function PurposeDropdown() {
     if (selected < today) return false;
 
     const dateKey = toDBDate(selected);
-    const dateRule = selectedSpecialSeva.dateRule || "any";
+    const dateRule = selectedSpecialSeva.dateRule || "any";  // ← ADD
 
-    if (dateRule === "any") return true;
-    if (dateRule === "thursday" && selected.getDay() !== 4) return false;
-    if (dateRule === "sun_thu" && selected.getDay() !== 0 && selected.getDay() !== 4) return false;
+    if (dateRule === "any") return true;  // ← ADD
+    if (dateRule === "thursday" && selected.getDay() !== 4) return false;  // ← ADD
+    if (dateRule === "sun_thu" && selected.getDay() !== 0 && selected.getDay() !== 4) return false;  // ← ADD
 
-    // specificDates/date list — only used when dateRule === "specific"
     const allowedDates = (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || [])
       .map((d) => typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d));
 
-    if (dateRule === "specific" && !allowedDates.includes(dateKey)) return false;
+    if (!allowedDates.includes(dateKey)) return false;
 
     const maxPerDate = Number(selectedSpecialSeva.maxPerDate || 0);
     if (maxPerDate > 0) {
