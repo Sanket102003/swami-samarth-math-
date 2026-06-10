@@ -268,9 +268,12 @@ export default function PurposeDropdown() {
     const dateKey = toDBDate(selected);
     const dateRule = selectedSpecialSeva.dateRule || "any";  // ← ADD
 
-    if (dateRule === "any") return true;  // ← ADD
-    if (dateRule === "thursday" && selected.getDay() !== 4) return false;  // ← ADD
-    if (dateRule === "sun_thu" && selected.getDay() !== 0 && selected.getDay() !== 4) return false;  // ← ADD
+    if (dateRule === "any") return true;
+    if (dateRule === "thursday" && selected.getDay() !== 4) return false;
+    if (dateRule === "sun_thu" && selected.getDay() !== 0 && selected.getDay() !== 4) return false;
+
+    // If day passes above weekday checks, allow it.
+    if (dateRule === "thursday" || dateRule === "sun_thu") return true;
 
     const allowedDates = (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || [])
       .map((d) => typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d));
