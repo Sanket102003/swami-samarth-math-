@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
@@ -22,6 +22,13 @@ export default function TaxReceipt() {
   const [selectedBank, setSelectedBank] = useState("");
   const [panCard, setPanCard] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Online payment (ICICI / SBI / BCCB via Cashfree)
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState("");
+  const [pendingBookingId, setPendingBookingId] = useState("");
+  const cfReadyRef = useRef(false);
 
   // Cheque fields
   const [payingBankName, setPayingBankName] = useState("");
@@ -42,103 +49,186 @@ export default function TaxReceipt() {
   const validateEmail = (e) => { if (!e?.trim()) return true; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); };
   const validatePan   = (p) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(p.trim().toUpperCase());
 
+  // Load Cashfree JS SDK once
+  useEffect(() => {
+    if (document.getElementById("cashfree-sdk")) { cfReadyRef.current = true; return; }
+    const s = document.createElement("script");
+    s.id = "cashfree-sdk";
+    s.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    s.onload = () => { cfReadyRef.current = true; };
+    document.head.appendChild(s);
+  }, []);
+
+  // Launch Cashfree modal when payment session is ready
+  useEffect(() => {
+    if (!showPayment || !paymentSessionId || !pendingBookingId) return;
+
+    const launch = () => {
+      if (typeof window.Cashfree === "undefined") { setTimeout(launch, 150); return; }
+      const cashfree = window.Cashfree({ mode: "sandbox" }); // change to "production" for live
+      cashfree.checkout({ paymentSessionId, redirectTarget: "_modal" })
+        .then((result) => {
+          if (result?.error) {
+            setErrorMsg(result.error.message || "Payment failed or cancelled.");
+            setShowPayment(false);
+          } else if (result?.paymentDetails) {
+            localStorage.setItem("lastBooking", JSON.stringify({ bookingId: pendingBookingId }));
+            localStorage.removeItem("bookingForm");
+            router.push(`/booking-success?id=${encodeURIComponent(pendingBookingId)}`);
+          }
+        })
+        .catch((err) => {
+          setErrorMsg(err.message || "Payment error");
+          setShowPayment(false);
+        });
+    };
+    launch();
+  }, [showPayment, paymentSessionId, pendingBookingId]);
+
+  const showErr = (msg) => { setErrorMsg(msg); };
+
   const handleCreateBooking = async () => {
+    setErrorMsg("");
+    const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
+
+    // 1. Payment method
+    if (!selectedBank) { showErr("Please select a payment method"); return; }
+    if (isChequeSelected) {
+      if (!payingBankName.trim()) { showErr("Please enter paying bank name"); return; }
+      if (!chequeNumber.trim())   { showErr("Please enter cheque number"); return; }
+      if (!chequeDate)            { showErr("Please enter cheque date"); return; }
+    }
+    if (is80G) {
+      if (!panCard.trim())       { showErr("Please enter PAN card number for 80G"); return; }
+      if (!validatePan(panCard)) { showErr("Please enter a valid PAN card (e.g. ABCDE1234F)"); return; }
+    }
+
+    // 2. Name & phone
+    if (!savedForm.name?.trim())         { showErr("Please enter devotee name"); return; }
+    if (!validateName(savedForm.name))   { showErr("Name should contain only letters and spaces."); return; }
+    if (!savedForm.phone?.trim())        { showErr("Please enter phone number"); return; }
+    if (!validatePhone(savedForm.phone)) { showErr("Enter a valid 10-digit mobile number."); return; }
+    if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { showErr("Please enter a valid email address."); return; }
+
+    // 3. Event type
+    if (!savedForm.eventType) { showErr("Please select event type (Special or Regular)"); return; }
+
+    // 4. Purpose / event
+    if (!savedForm.purpose?.trim()) { showErr("Please select purpose / event"); return; }
+
+    // 5. Amount — only required when flexible
+    if (savedForm.amountType === "flexible") {
+      if (!Number(savedForm.amount) || Number(savedForm.amount) <= 0) { showErr("Please enter amount"); return; }
+    }
+
+    // 6. Date
+    const noCalendarPurposes = [
+      "Two Wheeler / दुचाकी (₹251)",
+      "Three Wheeler / तीनचाकी (₹351)",
+      "Four Wheeler / चारचाकी (₹551)",
+      "गाडीपुजा (टे पो, बस इयादी.)",
+    ];
+    const isMultiDate = Array.isArray(savedForm.multiDates) && savedForm.multiDates.length > 0;
+    if (isMultiDate) {
+      if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { showErr("Please enter price per date"); return; }
+    } else if (!noCalendarPurposes.includes(savedForm.purpose)) {
+      if (!savedForm.bookingDate) { showErr("Please select booking date"); return; }
+      const bd = new Date(savedForm.bookingDate);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (bd < today) { showErr("Past dates are not allowed."); return; }
+    }
+
+    const amount = Number(savedForm.amount || 0);
+    let advance = Number(savedForm.advance || 0);
+    let remainingAmount = Number(savedForm.remainingAmount || 0);
+
+    const normalizedPurpose = normalizePurpose(savedForm.purpose);
+    const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
+
+    let status = "Approved";
+    if (isAdvanceAllowed) {
+      status = remainingAmount > 0 ? "Pending" : "Approved";
+    } else {
+      advance = amount; remainingAmount = 0; status = "Approved";
+    }
+
+    const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
+
+    const bookingPayload = {
+      customerId: savedForm.customerId || "",
+      bookingGroupId: savedForm.bookingGroupId || "",
+      parentBookingId: savedForm.parentBookingId || "",
+      name: savedForm.name?.trim() || "",
+      phone: savedForm.phone?.trim() || "",
+      email: savedForm.email?.trim() || "",
+      address: savedForm.address?.trim() || "",
+      purpose: savedForm.purpose || "",
+      bookingDate: savedForm.bookingDate,
+      multiDates: savedForm.multiDates || [],
+      pricePerDate: savedForm.pricePerDate || "",
+      gotra: savedForm.gotra || "",
+      amount, advance, paidAmount: advance, remainingAmount,
+      paymentType,
+      receiptType: "Tax",
+      bank: selectedBank,
+      is80G,
+      panCard: is80G ? panCard.trim().toUpperCase() : "",
+      payingBankName: isChequeSelected ? payingBankName.trim() : "",
+      chequeNumber:   isChequeSelected ? chequeNumber.trim() : "",
+      chequeDate:     isChequeSelected ? chequeDate : "",
+      reason: savedForm.reason || "",
+    };
+
+    const isOnlineBank = selectedBank === "ICICI Bank" || selectedBank === "SBI Bank" || selectedBank === "BCCB Bank";
+
     try {
       setLoading(true);
-      const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
 
-      if (!savedForm.name?.trim())         { alert("Please enter devotee name"); return; }
-      if (!validateName(savedForm.name))   { alert("Name should contain only letters and spaces."); return; }
-      if (!savedForm.phone?.trim())        { alert("Please enter phone number"); return; }
-      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
-      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
-      if (!savedForm.purpose?.trim())      { alert("Please select purpose"); return; }
+      if (isOnlineBank) {
+        // Step 1: Save to dedicated pending DB (separate from booking DB)
+        const pendingRes = await apiRequest("/create_pending_booking", {
+          method: "POST",
+          body: JSON.stringify(bookingPayload),
+        });
+        const orderId = pendingRes?.orderId || "";
+        if (!orderId) { showErr("Failed to create pending booking. Please try again."); return; }
 
-      const noCalendarPurposes = [
-        "Two Wheeler / दुचाकी (₹251)",
-        "Three Wheeler / तीनचाकी (₹351)",
-        "Four Wheeler / चारचाकी (₹551)",
-        "गाडीपुजा (टे पो, बस इयादी.)",
-      ];
+        // Step 2: Create Cashfree payment order using orderId as reference
+        const orderRes = await apiRequest("/create_payment_order", {
+          method: "POST",
+          body: JSON.stringify({
+            bank: selectedBank,
+            amount,
+            orderId,
+            customerName: savedForm.name?.trim(),
+            customerPhone: savedForm.phone?.trim(),
+            customerEmail: savedForm.email?.trim() || "devotee@ssmvd.org",
+          }),
+        });
 
-      if (savedForm.purpose === "Abhishek / अभिषेक") {
-        if (!savedForm.abhishekType?.trim())  { alert("Please select Abhishek type"); return; }
-        if (!savedForm.abhishekGotra?.trim()) { alert("Please select or enter Gotra"); return; }
-        if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { alert("Please enter price per date"); return; }
-        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) { alert("Please select at least one date for Abhishek"); return; }
-      } else if (!noCalendarPurposes.includes(savedForm.purpose) && !savedForm.bookingDate) {
-        alert("Please select booking date"); return;
-      }
+        if (!orderRes?.payment_session_id) {
+          showErr("Could not initiate payment. Please try again.");
+          return;
+        }
 
-      const bookingDate = new Date(savedForm.bookingDate);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
-
-      if (!selectedBank) { alert("Please select a payment method"); return; }
-
-      // Cheque validation
-      if (isChequeSelected) {
-        if (!payingBankName.trim()) { alert("Please enter paying bank name"); return; }
-        if (!chequeNumber.trim())   { alert("Please enter cheque number"); return; }
-        if (!chequeDate)            { alert("Please enter cheque date"); return; }
-      }
-
-      if (is80G) {
-        if (!panCard.trim())       { alert("Please enter PAN card number for 80G"); return; }
-        if (!validatePan(panCard)) { alert("Please enter a valid PAN card (e.g. ABCDE1234F)"); return; }
-      }
-
-      const amount = Number(savedForm.amount || 0);
-      let advance = Number(savedForm.advance || 0);
-      let remainingAmount = Number(savedForm.remainingAmount || 0);
-
-      if (Number.isNaN(amount) || amount <= 0) { alert("Amount must be greater than 0"); return; }
-
-      const normalizedPurpose = normalizePurpose(savedForm.purpose);
-      const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
-
-      let status = "Approved";
-      if (isAdvanceAllowed) {
-        status = remainingAmount > 0 ? "Pending" : "Approved";
+        // Step 3: Show Cashfree QR modal (triggered by useEffect)
+        setPendingBookingId(orderId);
+        setPaymentSessionId(orderRes.payment_session_id);
+        setShowPayment(true);
       } else {
-        advance = amount; remainingAmount = 0; status = "Approved";
+        // Cash / Cheque — direct booking
+        const response = await apiRequest("/create_booking", {
+          method: "POST",
+          body: JSON.stringify({ ...bookingPayload, status }),
+        });
+        const receiptId = response?.booking?.bookingId || response?.booking?.receiptId || response?.bookingId || "BOOKING";
+        localStorage.setItem("lastBooking", JSON.stringify({ ...(response?.booking || {}), bookingId: receiptId }));
+        localStorage.removeItem("bookingForm");
+        router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
       }
-
-      const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
-
-      const response = await apiRequest("/create_booking", {
-        method: "POST",
-        body: JSON.stringify({
-          customerId: savedForm.customerId || "",
-          bookingGroupId: savedForm.bookingGroupId || "",
-          parentBookingId: savedForm.parentBookingId || "",
-          name: savedForm.name?.trim() || "",
-          phone: savedForm.phone?.trim() || "",
-          email: savedForm.email?.trim() || "",
-          address: savedForm.address?.trim() || "",
-          purpose: savedForm.purpose || "",
-          bookingDate: savedForm.bookingDate,
-          amount, advance, paidAmount: advance, remainingAmount,
-          paymentType, status,
-          receiptType: "Tax",
-          bank: selectedBank,
-          is80G,
-          panCard: is80G ? panCard.trim().toUpperCase() : "",
-          // Cheque details — only sent when Cheque selected
-          payingBankName: isChequeSelected ? payingBankName.trim() : "",
-          chequeNumber:   isChequeSelected ? chequeNumber.trim() : "",
-          chequeDate:     isChequeSelected ? chequeDate : "",
-          reason: savedForm.reason || "",
-        }),
-      });
-
-      const receiptId = response?.booking?.bookingId || response?.booking?.receiptId || response?.bookingId || "BOOKING";
-      localStorage.setItem("lastBooking", JSON.stringify({ ...(response?.booking || {}), bookingId: receiptId }));
-      localStorage.removeItem("bookingForm");
-      router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
     } catch (err) {
       console.error("Tax booking error:", err);
-      alert(err.message || "Failed to create booking");
+      showErr(err.message || "Failed to create booking");
     } finally {
       setLoading(false);
     }
@@ -314,13 +404,49 @@ export default function TaxReceipt() {
           </div>
         </div>
 
+        {errorMsg && (
+          <div style={{
+            background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px",
+            color: "#dc2626", padding: "6px 10px", marginBottom: "8px",
+            fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
+          }}>
+            <span>⚠️</span>
+            <span style={{ flex: 1 }}>{errorMsg}</span>
+            <button onClick={() => setErrorMsg("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: "14px", lineHeight: 1 }}>✕</button>
+          </div>
+        )}
+
+        {/* PAYMENT IN PROGRESS — shown while Cashfree QR modal is open */}
+        {showPayment && (
+          <div style={{
+            background: "#f0f9ff", border: "1px solid #0ea5e9", borderRadius: "8px",
+            padding: "14px 16px", marginBottom: "10px", textAlign: "center",
+          }}>
+            <p style={{ fontWeight: 600, color: "#0369a1", marginBottom: "4px", fontSize: "14px" }}>
+              💳 Payment window is open — complete the UPI payment in the popup.
+            </p>
+            <p style={{ fontSize: "12px", color: "#666", marginBottom: "10px" }}>
+              Booking ID: <strong>{pendingBookingId}</strong>
+            </p>
+            <button
+              style={{
+                fontSize: "12px", padding: "4px 14px", cursor: "pointer",
+                border: "1px solid #94a3b8", borderRadius: "4px", background: "#fff",
+              }}
+              onClick={() => { setShowPayment(false); setPaymentSessionId(""); }}
+            >
+              Cancel Payment
+            </button>
+          </div>
+        )}
+
         {/* ACTION BUTTONS */}
         <div className="tr-actions">
-          <button className="secondary-btn" onClick={() => router.push("/new-booking")} disabled={loading}>
+          <button className="secondary-btn" onClick={() => router.push("/new-booking")} disabled={loading || showPayment}>
             ← Back / मागे
           </button>
-          <button className="primary-btn" onClick={handleCreateBooking} disabled={loading}>
-            {loading ? "Creating..." : "Create Booking / बुकिंग करा ✓"}
+          <button className="primary-btn" onClick={handleCreateBooking} disabled={loading || showPayment}>
+            {loading ? "Processing..." : "Create Booking / बुकिंग करा ✓"}
           </button>
         </div>
       </div>

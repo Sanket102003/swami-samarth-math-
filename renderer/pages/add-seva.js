@@ -33,14 +33,7 @@ function AddSeva() {
   /* ── Step 2: Name ── */
   const [displayName, setDisplayName] = useState("");
 
-  /* ── Step 3: Sub-purposes ── */
-  const [hasSubPurposes, setHasSubPurposes] = useState(false);
-  const [subPurposes, setSubPurposes] = useState([
-    { name: "", amount: "", slots: "", isMultiDate: false, paymentOptions: "" },
-  ]);
-  const [hasGotra, setHasGotra] = useState(false);
-
-  /* ── Step 4: Amount ── */
+  /* ── Step 3: Amount ── */
   const [amountType, setAmountType] = useState("");
   const [fixedAmount, setFixedAmount] = useState("");
 
@@ -59,6 +52,26 @@ function AddSeva() {
   const [toast, setToast] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [blockOnSpecialDates, setBlockOnSpecialDates] = useState(false);
+  const [allowMultiDate, setAllowMultiDate] = useState(false);
+  const [hasGotra, setHasGotra] = useState(false);
+
+  /* ============================================================
+     LOCAL FLAG HELPERS
+     Wix backend may not persist allowMultiDate / hasGotra /
+     blockOnSpecialDates, so we cache them in localStorage
+     keyed by "eventType::displayName" and merge on every load.
+  ============================================================ */
+  const getLocalSevaFlags = () => {
+    try { return JSON.parse(localStorage.getItem("sevaLocalFlags") || "{}"); }
+    catch { return {}; }
+  };
+
+  const saveLocalSevaFlag = (evType, name, flags) => {
+    const key = `${evType}::${name.trim()}`;
+    const existing = getLocalSevaFlags();
+    existing[key] = flags;
+    localStorage.setItem("sevaLocalFlags", JSON.stringify(existing));
+  };
 
   /* ============================================================
      LOAD EXISTING SEVA LIST
@@ -71,7 +84,13 @@ function AddSeva() {
     try {
       const res = await apiRequest("/get_seva_list");
       const list = res.sevaList || res.data || res || [];
-      setSevaList(Array.isArray(list) ? list : []);
+      const rawList = Array.isArray(list) ? list : [];
+      const localFlags = getLocalSevaFlags();
+      const merged = rawList.map((s) => {
+        const key = `${s.eventType}::${(s.displayName || "").trim()}`;
+        return localFlags[key] ? { ...s, ...localFlags[key] } : s;
+      });
+      setSevaList(merged);
     } catch {
       setSevaList([]);
     } finally {
@@ -99,10 +118,9 @@ function AddSeva() {
     setEditingId(null);
     setStep(1); setEventType(""); setDisplayName("");
     setAmountType(""); setFixedAmount("");
-    setHasSubPurposes(false); setHasGotra(false);
-    setSubPurposes([{ name: "", amount: "", slots: "", isMultiDate: false, paymentOptions: "" }]);
     setPaymentOptions(""); setDateRule(""); setSpecificDates([]); setMaxPerDate("");
     setIsActive(true); setBlockOnSpecialDates(false);
+    setAllowMultiDate(false); setHasGotra(false);
   };
 
   /* ============================================================
@@ -118,18 +136,6 @@ function AddSeva() {
     setDisplayName(seva.displayName || "");
     setAmountType(seva.amountType || "");
     setFixedAmount(seva.amount ? String(seva.amount) : "");
-    setHasSubPurposes(!!seva.hasSubPurposes);
-    setHasGotra(!!seva.hasGotra);
-    setSubPurposes(
-      seva.subPurposes?.length > 0
-        ? seva.subPurposes.map((sp) => ({
-            name: sp.name || "",
-            amount: sp.amount !== undefined ? String(sp.amount) : "",
-            slots: sp.slots !== undefined ? String(sp.slots) : "",
-            isMultiDate: !!sp.isMultiDate,
-          }))
-        : [{ name: "", amount: "", slots: "", isMultiDate: false, paymentOptions: "" }]
-    );
     setPaymentOptions(seva.paymentOptions || "");
     setDateRule(seva.dateRule || "");
     setSpecificDates(
@@ -145,23 +151,13 @@ function AddSeva() {
     setMaxPerDate(seva.maxPerDate ? String(seva.maxPerDate) : "");
     setIsActive(seva.isActive !== false);
     setBlockOnSpecialDates(!!seva.blockOnSpecialDates);
+    setAllowMultiDate(!!seva.allowMultiDate);
+    setHasGotra(!!seva.hasGotra);
 
     // Scroll to form
     window.scrollTo({ top: 0, behavior: "smooth" });
     showToast("✏️ Editing: " + seva.displayName);
   };
-
-  /* ============================================================
-     SUB-PURPOSE HANDLERS
-  ============================================================ */
-  const addSubPurpose = () =>
-    setSubPurposes([...subPurposes, { name: "", amount: "", slots: "", isMultiDate: false, paymentOptions: "" }]);
-
-  const removeSubPurpose = (index) =>
-    setSubPurposes(subPurposes.filter((_, i) => i !== index));
-
-  const updateSubPurpose = (index, field, value) =>
-    setSubPurposes(subPurposes.map((sp, i) => (i === index ? { ...sp, [field]: value } : sp)));
 
   /* ============================================================
      SPECIFIC DATES CALENDAR TOGGLE
@@ -181,25 +177,15 @@ function AddSeva() {
     if (step === 1) return !!eventType;
     if (step === 2) return displayName.trim().length >= 2;
     if (step === 3) {
-      if (hasSubPurposes) {
-        const allNamed = subPurposes.every((sp) => sp.name.trim());
-        if (!allNamed) return false;
-        if (subPurposes.length > 1) return subPurposes.every((sp) => sp.paymentOptions);
-        return true;
-      }
-      return true;
-    }
-    if (step === 4) {
       if (!amountType) return false;
       if (amountType === "fixed" && (!fixedAmount || Number(fixedAmount) <= 0)) return false;
       return true;
     }
-    if (step === 5) {
+    if (step === 4) {
       if (amountType === "flexible") return true;
-      if (hasSubPurposes && subPurposes.length > 1) return true;
       return !!paymentOptions;
     }
-    if (step === 6) {
+    if (step === 5) {
       if (!dateRule) return false;
       if (dateRule === "specific" && specificDates.length === 0) return false;
       return true;
@@ -223,27 +209,16 @@ function AddSeva() {
         displayName: displayName.trim(),
         specialEventName: eventType === "special" ? nameKey : "",
         regularEventName: eventType === "regular" ? nameKey : "",
-        amountType: hasSubPurposes ? "flexible" : amountType,
-        amount: hasSubPurposes ? 0 : (amountType === "fixed" ? Number(fixedAmount) : 0),
-        paymentOptions: amountType === "fixed" ? paymentOptions : "full",
-        hasSubPurposes,
-        subPurposes: hasSubPurposes
-          ? subPurposes
-              .filter((sp) => sp.name.trim())
-              .map((sp) => ({
-                name: sp.name.trim(),
-                amount: Number(sp.amount) || 0,
-                slots: Number(sp.slots) || 0,
-                isMultiDate: sp.isMultiDate,
-                paymentOptions: sp.paymentOptions || "full",
-              }))
-          : [],
-        hasGotra,
+        amountType,
+        amount: amountType === "fixed" ? Number(fixedAmount) : 0,
+        paymentOptions: amountType === "flexible" ? "full" : paymentOptions,
         dateRule,
         specificDates: dateRule === "specific" ? specificDates.map(toDBDate).sort() : [],
         dates: dateRule === "specific" ? specificDates.map(toDBDate).sort().join(",") : "",
         maxPerDate: maxPerDate ? Number(maxPerDate) : 0,
-        blockOnSpecialDates: eventType === "regular" ? blockOnSpecialDates : false,
+        blockOnSpecialDates: eventType === "special" ? blockOnSpecialDates : false,
+        allowMultiDate,
+        hasGotra,
         isActive,
       };
 
@@ -264,6 +239,7 @@ function AddSeva() {
         showToast("✅ Seva saved successfully!");
       }
 
+      saveLocalSevaFlag(eventType, displayName, { allowMultiDate, hasGotra, blockOnSpecialDates });
       await loadSevaList();
       resetForm();
     } catch (err) {
@@ -316,10 +292,9 @@ function AddSeva() {
   const steps = [
     { num: 1, label: "Event Type" },
     { num: 2, label: "Name" },
-    { num: 3, label: "Sub-purposes" },
-    { num: 4, label: hasSubPurposes ? "Amount (Skipped)" : "Amount" },
-    { num: 5, label: "Payment" },
-    { num: 6, label: "Date Rules" },
+    { num: 3, label: "Amount" },
+    { num: 4, label: "Payment" },
+    { num: 5, label: "Date Rules" },
   ];
 
   /* ============================================================
@@ -438,101 +413,10 @@ function AddSeva() {
             </div>
           )}
 
-          {/* ══ STEP 3: SUB-PURPOSES ══ */}
+          {/* ══ STEP 3: AMOUNT ══ */}
           {step === 3 && (
             <div className="as-step-body">
-              <h3 className="as-step-title">Step 3 — Sub-Purposes / उप-उद्देश</h3>
-              <p className="as-step-desc">Does this seva have sub-types? (e.g. Abhishek has Panchamrut, Rudrabhishek etc.)</p>
-              <div className="as-toggle-row">
-                <div>
-                  <p className="as-toggle-title">Add Sub-Purposes</p>
-                  <p className="as-toggle-desc">Users will see a dropdown to select sub-type</p>
-                </div>
-                <label className="as-switch">
-                  <input type="checkbox" checked={hasSubPurposes} onChange={(e) => setHasSubPurposes(e.target.checked)} />
-                  <span className="as-switch-slider" />
-                </label>
-              </div>
-              {hasSubPurposes && (
-                <>
-                  <div className="as-toggle-row" style={{ marginTop: "12px" }}>
-                    <div>
-                      <p className="as-toggle-title">Show Gotra Dropdown</p>
-                      <p className="as-toggle-desc">Users pick gotra (for Abhishek-type sevas)</p>
-                    </div>
-                    <label className="as-switch">
-                      <input type="checkbox" checked={hasGotra} onChange={(e) => setHasGotra(e.target.checked)} />
-                      <span className="as-switch-slider" />
-                    </label>
-                  </div>
-                  <div style={{ marginTop: "16px" }}>
-                    <label className="as-label">Sub-Purpose List</label>
-                    {subPurposes.map((sp, index) => (
-                      <div key={index} className="as-sub-row">
-                        <div className="as-sub-num">{index + 1}</div>
-                        <div className="as-sub-fields">
-                          <input className="input" placeholder="Sub-purpose name *" value={sp.name} onChange={(e) => updateSubPurpose(index, "name", e.target.value)} />
-                          <div style={{ display: "flex", gap: "8px" }}>
-                            <input type="number" className="input" placeholder="Amount per date (₹)" min="0" value={sp.amount} onChange={(e) => updateSubPurpose(index, "amount", e.target.value)} />
-                            <input type="number" className="input" placeholder="Max slots/day" min="0" value={sp.slots} onChange={(e) => updateSubPurpose(index, "slots", e.target.value)} />
-                          </div>
-                          <label className="as-check-row">
-                            <input type="checkbox" checked={sp.isMultiDate} onChange={(e) => updateSubPurpose(index, "isMultiDate", e.target.checked)} />
-                            <span>Allow multiple date selection (like Abhishek)</span>
-                          </label>
-
-                          {subPurposes.length > 1 && (
-                            <div style={{ marginTop: "10px" }}>
-                              <p style={{ fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "8px" }}>
-                                Payment Option / पेमेंट पर्याय *
-                              </p>
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <button
-                                  type="button"
-                                  onClick={() => updateSubPurpose(index, "paymentOptions", "full")}
-                                  style={{
-                                    flex: 1, padding: "10px 12px", borderRadius: "10px", cursor: "pointer", textAlign: "left",
-                                    border: sp.paymentOptions === "full" ? "2px solid #f97316" : "1.5px solid #e5e7eb",
-                                    background: sp.paymentOptions === "full" ? "#fff7ed" : "#fff",
-                                  }}
-                                >
-                                  <div style={{ fontSize: "18px" }}>💰</div>
-                                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>Full Payment Only</div>
-                                  <div style={{ fontSize: "11px", color: "#f97316", fontWeight: 600 }}>फक्त पूर्ण पेमेंट</div>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateSubPurpose(index, "paymentOptions", "full_advance")}
-                                  style={{
-                                    flex: 1, padding: "10px 12px", borderRadius: "10px", cursor: "pointer", textAlign: "left",
-                                    border: sp.paymentOptions === "full_advance" ? "2px solid #f97316" : "1.5px solid #e5e7eb",
-                                    background: sp.paymentOptions === "full_advance" ? "#fff7ed" : "#fff",
-                                  }}
-                                >
-                                  <div style={{ fontSize: "18px" }}>📋</div>
-                                  <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>Full + Advance</div>
-                                  <div style={{ fontSize: "11px", color: "#f97316", fontWeight: 600 }}>पूर्ण + आगाऊ</div>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        {subPurposes.length > 1 && (
-                          <button className="as-sub-remove" onClick={() => removeSubPurpose(index)}>×</button>
-                        )}
-                      </div>
-                    ))}
-                    <button type="button" className="as-add-sub-btn" onClick={addSubPurpose}>+ Add Another Sub-Purpose</button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* ══ STEP 4: AMOUNT ══ */}
-          {step === 4 && !hasSubPurposes && (
-            <div className="as-step-body">
-              <h3 className="as-step-title">Step 4 — Amount / रक्कम</h3>
+              <h3 className="as-step-title">Step 3 — Amount / रक्कम</h3>
               <p className="as-step-desc">Is the amount fixed by admin or entered by the user at booking time?</p>
               <div className="as-type-grid">
                 <button type="button" className={`as-type-btn ${amountType === "fixed" ? "as-type-btn--active" : ""}`} onClick={() => setAmountType("fixed")}>
@@ -557,15 +441,13 @@ function AddSeva() {
             </div>
           )}
 
-          {/* ══ STEP 5: PAYMENT OPTIONS ══ */}
-          {step === 5 && (
+          {/* ══ STEP 4: PAYMENT OPTIONS ══ */}
+          {step === 4 && (
             <div className="as-step-body">
-              <h3 className="as-step-title">Step 5 — Payment Options / पेमेंट पर्याय</h3>
-              {(amountType === "flexible" || (hasSubPurposes && subPurposes.length > 1)) ? (
+              <h3 className="as-step-title">Step 4 — Payment Options / पेमेंट पर्याय</h3>
+              {amountType === "flexible" ? (
                 <div className="as-info-box">
-                  ℹ️ {hasSubPurposes && subPurposes.length > 1
-                    ? "Payment options are already set per sub-purpose in Step 3."
-                    : "Since this seva has a flexible amount, only Full Payment applies — users pay the full amount they enter."}
+                  ℹ️ Since this seva has a flexible amount, only Full Payment applies — users pay the full amount they enter.
                 </div>
               ) : (
                 <>
@@ -589,13 +471,13 @@ function AddSeva() {
             </div>
           )}
 
-          {/* ══ STEP 6: DATE RULES ══ */}
-          {step === 6 && (
+          {/* ══ STEP 5: DATE RULES ══ */}
+          {step === 5 && (
             <div className="as-step-body">
-              <h3 className="as-step-title">Step 6 — Date Rules / तारीख नियम</h3>
+              <h3 className="as-step-title">Step 5 — Date Rules / तारीख नियम</h3>
               <p className="as-step-desc">Which dates can users select for this seva?</p>
               <div className="as-date-rule-list">
-                {DATE_RULES.map((rule) => (
+                {(eventType === "special" ? DATE_RULES.filter((r) => r.key === "specific") : DATE_RULES).map((rule) => (
                   <button key={rule.key} type="button" className={`as-date-rule-btn ${dateRule === rule.key ? "as-date-rule-btn--active" : ""}`} onClick={() => { setDateRule(rule.key); setSpecificDates([]); }}>
                     <span className="as-date-rule-icon">{rule.icon}</span>
                     <div>
@@ -623,7 +505,7 @@ function AddSeva() {
                 </div>
               )}
 
-              {eventType === "regular" && dateRule && (
+              {eventType === "special" && dateRule && (
                 <div className="as-toggle-row" style={{ marginTop: "16px" }}>
                   <div>
                     <p className="as-toggle-title">🚫 Block on Special Event Dates</p>
@@ -635,6 +517,30 @@ function AddSeva() {
                   </label>
                 </div>
               )}
+
+              {/* ── Allow Multiple Date Selection ── */}
+              <div className="as-toggle-row" style={{ marginTop: "16px" }}>
+                <div>
+                  <p className="as-toggle-title">📅 Allow Multiple Date Selection / अनेक तारखा निवड</p>
+                  <p className="as-toggle-desc">If ON, users can select multiple dates when booking this seva</p>
+                </div>
+                <label className="as-switch">
+                  <input type="checkbox" checked={allowMultiDate} onChange={(e) => setAllowMultiDate(e.target.checked)} />
+                  <span className="as-switch-slider" />
+                </label>
+              </div>
+
+              {/* ── Require Gotra ── */}
+              <div className="as-toggle-row" style={{ marginTop: "12px" }}>
+                <div>
+                  <p className="as-toggle-title">🙏 Require Gotra / गोत्र आवश्यक</p>
+                  <p className="as-toggle-desc">If ON, users must select their Gotra when booking this seva</p>
+                </div>
+                <label className="as-switch">
+                  <input type="checkbox" checked={hasGotra} onChange={(e) => setHasGotra(e.target.checked)} />
+                  <span className="as-switch-slider" />
+                </label>
+              </div>
 
               {dateRule && (
                 <div className="as-field" style={{ marginTop: "16px" }}>
@@ -651,18 +557,12 @@ function AddSeva() {
           {/* ── NAV BUTTONS ── */}
           <div className="as-nav">
             {step > 1 && (
-              <button type="button" className="secondary-btn" onClick={() => {
-                if (step === 5 && hasSubPurposes) setStep(3);
-                else setStep(step - 1);
-              }}>
+              <button type="button" className="secondary-btn" onClick={() => setStep(step - 1)}>
                 ← Back
               </button>
             )}
-            {step < 6 ? (
-              <button type="button" className="primary-btn" disabled={!canProceed()} onClick={() => {
-                if (step === 3 && hasSubPurposes) setStep(5);
-                else setStep(step + 1);
-              }}>
+            {step < 5 ? (
+              <button type="button" className="primary-btn" disabled={!canProceed()} onClick={() => setStep(step + 1)}>
                 Next →
               </button>
             ) : (
@@ -714,7 +614,6 @@ function AddSeva() {
                         <span>·</span>
                         <span>{DATE_RULES.find((r) => r.key === seva.dateRule)?.label || seva.dateRule}</span>
                         {seva.maxPerDate > 0 && <><span>·</span><span>Max {seva.maxPerDate}/date</span></>}
-                        {seva.hasSubPurposes && <><span>·</span><span>{seva.subPurposes?.length || 0} sub-purposes</span></>}
                         <span>·</span>
                         <span style={{ color: seva.isActive === false ? "#dc2626" : "#16a34a", fontWeight: 700 }}>
                           {seva.isActive === false ? "🚫 Inactive" : "✅ Active"}

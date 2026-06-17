@@ -19,7 +19,6 @@ import "../styles/tax-receipt.css";
 import "../styles/allBookings.css";
 import "../styles/tomorrowSchedule.css";
 import "../styles/reports.css";
-import "../styles/settings.css";
 import "../styles/edit.css";
 import "../styles/success.css";
 import "../styles/print.css"; 

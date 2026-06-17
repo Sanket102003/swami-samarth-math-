@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, session } from "electron";
 import serve from "electron-serve";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -16,6 +16,24 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 
 async function createWindow() {
+  // Inject CORS headers for all Wix backend requests.
+  // Also force status 200 on OPTIONS preflight so the browser accepts it
+  // even when Wix returns 404/405 for endpoints without an OPTIONS handler.
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls: ["https://www.swamisamrathbhuigaon.com/_functions/*"] },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "access-control-allow-origin":  ["*"],
+          "access-control-allow-methods": ["GET, POST, PUT, DELETE, OPTIONS"],
+          "access-control-allow-headers": ["Content-Type, Authorization"],
+        },
+        statusLine: details.method === "OPTIONS" ? "HTTP/1.1 200 OK" : details.statusLine,
+      });
+    }
+  );
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,

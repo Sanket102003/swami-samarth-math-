@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import {
   FaHome, FaPlus, FaList, FaCalendar,
-  FaChartBar, FaCog, FaUser, FaSignOutAlt,
+  FaChartBar, FaUser, FaSignOutAlt,
 } from "react-icons/fa";
 
 export default function Sidebar() {
@@ -16,7 +16,7 @@ export default function Sidebar() {
   }, []);
 
   const ROLE_MENU = {
-    Admin: ["dashboard", "new_booking", "all_bookings", "schedule", "reports", "settings", "add_seva", "profile"],
+    Admin: ["dashboard", "new_booking", "all_bookings", "schedule", "reports", "add_seva", "profile"],
     "Entry Operator": ["dashboard", "new_booking", "all_bookings", "schedule", "profile"],
     Accountant: ["dashboard", "new_booking", "all_bookings", "reports", "profile"],
   };
@@ -28,7 +28,6 @@ export default function Sidebar() {
     { key: "all_bookings", name: "All Bookings",        path: "/all-bookings",      icon: <FaList /> },
     { key: "schedule",     name: "Tomorrow's Schedule", path: "/tomorrow-schedule", icon: <FaCalendar /> },
     { key: "reports",      name: "Reports",             path: "/reports",           icon: <FaChartBar /> },
-    { key: "settings",     name: "Settings",            path: "/settings",          icon: <FaCog /> },
     { key: "add_seva",     name: "Add Seva",            path: "/add-seva",          icon: <FaPlus /> },
     { key: "profile",      name: "My Profile",          path: "/profile",           icon: <FaUser /> },
   ];
@@ -54,8 +53,22 @@ export default function Sidebar() {
     <div className="sidebar">
       {/* Logo */}
       <div className="logo">
-        🙏 स्वामी समर्थ मठ
-        <div className="sub-logo">भुईगाव-वसई</div>
+        <img
+          src="/images/Swami Samarath.jpeg"
+          alt="Swami Samarth"
+          style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: "50%",
+            objectFit: "cover",
+            border: "2px solid #f97316",
+            flexShrink: 0,
+          }}
+        />
+        <div>
+          श्री स्वामी समर्थ सेवा परिवार
+          <div className="sub-logo">भुईगाव-वसई</div>
+        </div>
       </div>
 
       {/* Menu title */}

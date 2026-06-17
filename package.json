@@ -43,17 +43,11 @@
       "output": "dist"
     },
     "files": [
-      "main/**/*",
-      "renderer/.next/**/*",
-      "renderer/pages/**/*",
-      "renderer/components/**/*",
-      "renderer/styles/**/*",
-      "renderer/public/**/*",
-      "public/**/*",
+      "app/**/*",
       "package.json"
     ],
     "extraMetadata": {
-      "main": "main/main.js"
+      "main": "app/main.js"
     },
     "win": {
       "target": [

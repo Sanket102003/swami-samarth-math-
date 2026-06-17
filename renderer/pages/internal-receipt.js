@@ -9,6 +9,7 @@ import apiRequest from "../services/api";
 export default function InternalReceipt() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
 
@@ -25,65 +26,65 @@ export default function InternalReceipt() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
   };
 
+  const showErr = (msg) => { setErrorMsg(msg); };
+
   const handleCreateBooking = async () => {
+    setErrorMsg("");
+    const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
+
+    // 1. Name & phone
+    if (!savedForm.name?.trim())         { showErr("Please enter devotee name"); return; }
+    if (!validateName(savedForm.name))   { showErr("Name should contain only letters and spaces."); return; }
+    if (!savedForm.phone?.trim())        { showErr("Please enter phone number"); return; }
+    if (!validatePhone(savedForm.phone)) { showErr("Enter a valid 10-digit mobile number."); return; }
+    if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { showErr("Please enter a valid email address."); return; }
+
+    // 2. Event type
+    if (!savedForm.eventType) { showErr("Please select event type (Special or Regular)"); return; }
+
+    // 3. Purpose / event
+    if (!savedForm.purpose?.trim()) { showErr("Please select purpose / event"); return; }
+
+    // 4. Amount — only required when flexible
+    if (savedForm.amountType === "flexible") {
+      if (!Number(savedForm.amount) || Number(savedForm.amount) <= 0) { showErr("Please enter amount"); return; }
+    }
+
+    // 5. Date
+    const noCalendarPurposes = [
+      "Two Wheeler / दुचाकी (₹251)",
+      "Three Wheeler / तीनचाकी (₹351)",
+      "Four Wheeler / चारचाकी (₹551)",
+      "गाडीपुजा (टे पो, बस इयादी.)",
+    ];
+    const isMultiDate = Array.isArray(savedForm.multiDates) && savedForm.multiDates.length > 0;
+    if (isMultiDate) {
+      if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { showErr("Please enter price per date"); return; }
+    } else if (!noCalendarPurposes.includes(savedForm.purpose)) {
+      if (!savedForm.bookingDate) { showErr("Please select booking date"); return; }
+      const bd = new Date(savedForm.bookingDate);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      if (bd < today) { showErr("Past dates are not allowed."); return; }
+    }
+
+    const amount = Number(savedForm.amount || 0);
+    let advance = Number(savedForm.advance || 0);
+    let remainingAmount = Number(savedForm.remainingAmount || 0);
+
+    const normalizedPurpose = normalizePurpose(savedForm.purpose);
+    const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
+
+    let status = "Approved";
+    if (isAdvanceAllowed) {
+      status = remainingAmount > 0 ? "Pending" : "Approved";
+    } else {
+      advance = amount; remainingAmount = 0; status = "Approved";
+    }
+
+    const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
+
     try {
       setLoading(true);
-      const savedForm = JSON.parse(localStorage.getItem("bookingForm") || "{}");
-
-      if (!savedForm.name?.trim()) { alert("Please enter devotee name"); return; }
-      if (!validateName(savedForm.name)) { alert("Name should contain only letters and spaces."); return; }
-      if (!savedForm.phone?.trim()) { alert("Please enter phone number"); return; }
-      if (!validatePhone(savedForm.phone)) { alert("Enter a valid 10-digit mobile number."); return; }
-      if (savedForm.email?.trim() && !validateEmail(savedForm.email)) { alert("Please enter a valid email address."); return; }
-      if (!savedForm.purpose?.trim()) { alert("Please select purpose"); return; }
-
-      const noCalendarPurposes = [
-        "Two Wheeler / दुचाकी (₹251)",
-        "Three Wheeler / तीनचाकी (₹351)",
-        "Four Wheeler / चारचाकी (₹551)",
-        "गाडीपुजा (टे पो, बस इयादी.)",
-      ];
-
-      if (savedForm.purpose === "Abhishek / अभिषेक") {
-        if (!savedForm.abhishekType?.trim()) { alert("Please select Abhishek type"); return; }
-        if (!savedForm.abhishekGotra?.trim()) { alert("Please select or enter Gotra"); return; }
-        if (!savedForm.pricePerDate || Number(savedForm.pricePerDate) <= 0) { alert("Please enter price per date"); return; }
-        if (!savedForm.abhishekDates || savedForm.abhishekDates.length === 0) {
-          alert("Please select at least one date for Abhishek");
-          return;
-        }
-      } else if (!noCalendarPurposes.includes(savedForm.purpose) &&
-                 savedForm.purpose !== "Abhishek / अभिषेक" &&
-                 !savedForm.bookingDate) {
-        alert("Please select booking date");
-        return;
-      }
-
-      const bookingDate = new Date(savedForm.bookingDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (bookingDate < today) { alert("Past dates are not allowed."); return; }
-
-      const amount = Number(savedForm.amount || 0);
-      let advance = Number(savedForm.advance || 0);
-      let remainingAmount = Number(savedForm.remainingAmount || 0);
-
-      if (Number.isNaN(amount) || amount <= 0) { alert("Amount must be greater than 0"); return; }
-
-      const normalizedPurpose = normalizePurpose(savedForm.purpose);
-      const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
-
-      let status = "Approved";
-      if (isAdvanceAllowed) {
-        status = remainingAmount > 0 ? "Pending" : "Approved";
-      } else {
-        advance = amount;
-        remainingAmount = 0;
-        status = "Approved";
-      }
-
-      const paymentType = savedForm.paymentType || (remainingAmount > 0 ? "Advance Payment" : "Full Payment");
-
       const response = await apiRequest("/create_booking", {
         method: "POST",
         body: JSON.stringify({
@@ -96,9 +97,13 @@ export default function InternalReceipt() {
           address: savedForm.address?.trim() || "",
           purpose: savedForm.purpose || "",
           bookingDate: savedForm.bookingDate,
+          multiDates: savedForm.multiDates || [],
+          pricePerDate: savedForm.pricePerDate || "",
+          gotra: savedForm.gotra || "",
           amount, advance, paidAmount: advance, remainingAmount,
           paymentType, status,
           receiptType: "Internal",
+          bank: "Cash",
           reason: savedForm.reason || "",
         }),
       });
@@ -109,7 +114,7 @@ export default function InternalReceipt() {
       router.push(`/booking-success?id=${encodeURIComponent(receiptId)}`);
     } catch (err) {
       console.error("Create booking error:", err);
-      alert(err.message || "Failed to create booking");
+      showErr(err.message || "Failed to create booking");
     } finally {
       setLoading(false);
     }
@@ -140,6 +145,28 @@ export default function InternalReceipt() {
           🧾 Internal Receipt / अंतर्गत पावती (Cash)
         </div>
 
+        {/* CASH PAYMENT INDICATOR */}
+        <div className="tr-card">
+          <div className="tr-card-header">
+            <div className="tr-card-icon">💵</div>
+            <div>
+              <p className="tr-card-title">Payment Method / पेमेंट पद्धत</p>
+              <p className="tr-card-subtitle">Internal receipts accept cash only</p>
+            </div>
+          </div>
+          <div className="tr-card-body">
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: "#f0fdf4", border: "1.5px solid #86efac",
+              borderRadius: "10px", padding: "10px 18px",
+              fontSize: "14px", fontWeight: 700, color: "#15803d",
+            }}>
+              <span style={{ fontSize: "20px" }}>💵</span>
+              Cash / रोख
+            </div>
+          </div>
+        </div>
+
         {/* DEVOTEE DETAILS CARD */}
         <div className="ir-card">
           <div className="ir-card-header">
@@ -167,6 +194,18 @@ export default function InternalReceipt() {
             <PurposeDropdown />
           </div>
         </div>
+
+        {errorMsg && (
+          <div style={{
+            background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px",
+            color: "#dc2626", padding: "6px 10px", marginBottom: "8px",
+            fontSize: "13px", display: "flex", alignItems: "center", gap: "6px",
+          }}>
+            <span>⚠️</span>
+            <span style={{ flex: 1 }}>{errorMsg}</span>
+            <button onClick={() => setErrorMsg("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: "14px", lineHeight: 1 }}>✕</button>
+          </div>
+        )}
 
         {/* ACTION BUTTONS */}
         <div className="ir-internal-actions">

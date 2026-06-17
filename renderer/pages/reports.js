@@ -14,6 +14,8 @@ function Reports() {
   const [purpose, setPurpose] = useState("All");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [amountOperator, setAmountOperator] = useState("");
+  const [amountValue, setAmountValue] = useState("");
   const [loading, setLoading] = useState(true);
 
   const purposeOptions = [{ name: "All" }, ...purposes];
@@ -59,17 +61,17 @@ function Reports() {
   /* ======================================================
      CALCULATE SUMMARY FROM FILTERED DATA
   ====================================================== */
-  const getCalculatedStats = () => {
+  const getCalculatedStats = (data = reportData) => {
     const uniqueGroups = new Set(
-      reportData.map((item) => item.bookingGroupId || item._id)
+      data.map((item) => item.bookingGroupId || item._id)
     );
 
-    const totalRevenue = reportData
+    const totalRevenue = data
       .filter((item) => (item.status || "").toLowerCase().trim() === "approved")
       .reduce((sum, item) => sum + Number(item.paidAmount || item.advance || 0), 0);
 
     const pendingMap = new Map();
-    reportData.forEach((item) => {
+    data.forEach((item) => {
       if ((item.status || "").toLowerCase().trim() !== "pending") return;
       const groupId = item.bookingGroupId || item._id;
       if (!pendingMap.has(groupId)) {
@@ -91,7 +93,7 @@ function Reports() {
   ====================================================== */
   const handleDownload = () => {
     try {
-      if (!reportData || reportData.length === 0) {
+      if (!filteredData || filteredData.length === 0) {
         alert("No report data found for the selected filters.");
         return;
       }
@@ -102,7 +104,7 @@ function Reports() {
         "Remaining Amount", "Status", "Booking Date",
       ];
 
-      const rows = reportData.map((item) => [
+      const rows = filteredData.map((item) => [
         item.bookingId || "",
         item.name || "",
         item.phone || "",
@@ -158,7 +160,18 @@ function Reports() {
   /* ======================================================
      UI
   ====================================================== */
-  const { totalRevenue, totalBookings, pendingDues } = getCalculatedStats();
+  /* ── Amount filter applied client-side after API fetch ── */
+  const filteredData = reportData.filter((item) => {
+    if (!amountOperator || amountValue === "") return true;
+    const itemAmt = Number(item.amount || 0);
+    const filterAmt = Number(amountValue);
+    if (amountOperator === "=")  return itemAmt === filterAmt;
+    if (amountOperator === ">=") return itemAmt >= filterAmt;
+    if (amountOperator === "<=") return itemAmt <= filterAmt;
+    return true;
+  });
+
+  const { totalRevenue, totalBookings, pendingDues } = getCalculatedStats(filteredData);
 
   // ── Reusable filter row config ──
   // Instead of repeating <div className="filter-left"> 4 times,
@@ -213,6 +226,35 @@ function Reports() {
           className="input"
           value={toDate}
           onChange={(e) => setToDate(e.target.value)}
+        />
+      ),
+    },
+    {
+      label: "Amount Filter",
+      element: (
+        <select
+          className="input"
+          value={amountOperator}
+          onChange={(e) => { setAmountOperator(e.target.value); setAmountValue(""); }}
+        >
+          <option value="">No Amount Filter</option>
+          <option value="=">= Equal to</option>
+          <option value=">=">≥ Greater than or equal</option>
+          <option value="<=">≤ Less than or equal</option>
+        </select>
+      ),
+    },
+    {
+      label: "Amount (₹)",
+      element: (
+        <input
+          type="number"
+          className="input"
+          placeholder={amountOperator ? "Enter amount" : "Select filter first"}
+          value={amountValue}
+          min="0"
+          disabled={!amountOperator}
+          onChange={(e) => setAmountValue(e.target.value)}
         />
       ),
     },
@@ -301,7 +343,12 @@ function Reports() {
 
         {/* ── RECORD COUNT ── */}
         <div className="reports-total">
-          Total Records: {reportData.length}
+          Total Records: {filteredData.length}
+          {filteredData.length !== reportData.length && (
+            <span style={{ marginLeft: "10px", color: "#f97316", fontSize: "13px", fontWeight: 600 }}>
+              (filtered from {reportData.length})
+            </span>
+          )}
         </div>
 
         {/* ── TABLE ── */}
@@ -315,7 +362,7 @@ function Reports() {
               </tr>
             </thead>
             <tbody>
-              {reportData.map((item, index) => (
+              {filteredData.map((item, index) => (
                 <tr key={item._id || index}>
                   {columns.map(({ header, render }) => (
                     <td key={header}>{render(item)}</td>

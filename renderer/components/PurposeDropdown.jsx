@@ -102,11 +102,22 @@ export default function PurposeDropdown() {
   /* ==========================================
      FETCH DATA
   ========================================== */
+  const getLocalSevaFlags = () => {
+    try { return JSON.parse(localStorage.getItem("sevaLocalFlags") || "{}"); }
+    catch { return {}; }
+  };
+
   const fetchData = useCallback(async () => {
     try {
       const res = await apiRequest("/get_seva_list");
       const list = res.sevaList || res.data || res || [];
-      setSevaList(Array.isArray(list) ? list : []);
+      const rawList = Array.isArray(list) ? list : [];
+      const localFlags = getLocalSevaFlags();
+      const merged = rawList.map((s) => {
+        const key = `${s.eventType}::${(s.displayName || "").trim()}`;
+        return localFlags[key] ? { ...s, ...localFlags[key] } : s;
+      });
+      setSevaList(merged);
     } catch {
       setSevaList([]);
     } finally {
@@ -333,6 +344,86 @@ export default function PurposeDropdown() {
   }, [selectedSeva, selectedSubPurpose, specialSevas, allBookings]);
 
   /* ==========================================
+     SLOTS-FULL DETECTION
+  ========================================== */
+  const isRegularDateSlotsFull = useCallback((date) => {
+    if (!date || !selectedSeva) return false;
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
+    if (isDateSelectable(date)) return false;
+
+    const dateKey = toDBDate(selected);
+    const dayOfWeek = selected.getDay();
+    const dateRule = selectedSeva.dateRule || "any";
+
+    if (selectedSeva?.blockOnSpecialDates) {
+      const blocked = specialSevas.flatMap((s) =>
+        (s.specificDates || s.dates || []).map((d) =>
+          typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d))
+      );
+      if (blocked.includes(dateKey)) return false;
+    }
+    if (dateRule === "thursday" && dayOfWeek !== 4) return false;
+    if (dateRule === "sun_thu" && dayOfWeek !== 0 && dayOfWeek !== 4) return false;
+    if (dateRule === "specific") {
+      const allowed = (selectedSeva.specificDates || []).map((d) =>
+        typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d));
+      if (!allowed.includes(dateKey)) return false;
+    }
+    return Number(selectedSeva.maxPerDate || 0) > 0;
+  }, [selectedSeva, specialSevas, isDateSelectable]);
+
+  const isSpecialDateSlotsFull = useCallback((date) => {
+    if (!date || !selectedSpecialSeva) return false;
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
+    if (isSpecialDateSelectable(date)) return false;
+
+    const activeSeva = selectedSpecialSeva.hasSubPurposes
+      ? selectedSpecialSeva.subPurposes?.find((s) => s.name === selectedSpecialSubPurpose)
+      : selectedSpecialSeva;
+    if (!activeSeva) return false;
+
+    const dateKey = toDBDate(selected);
+    const dateRule = selectedSpecialSeva.dateRule || "any";
+
+    if (dateRule === "thursday" && selected.getDay() !== 4) return false;
+    if (dateRule === "sun_thu" && selected.getDay() !== 0 && selected.getDay() !== 4) return false;
+    if (dateRule === "specific") {
+      const allowedDates = (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || [])
+        .map((d) => typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d));
+      if (!allowedDates.includes(dateKey)) return false;
+    }
+    return Number(selectedSpecialSeva.maxPerDate || 0) > 0;
+  }, [selectedSpecialSeva, selectedSpecialSubPurpose, isSpecialDateSelectable]);
+
+  const isMultiDateSlotsFull = useCallback((date) => {
+    if (!date || !selectedSeva) return false;
+    const selected = new Date(date);
+    selected.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (selected < today) return false;
+    if (isMultiDateSelectable(date)) return false;
+
+    const dateKey = toDBDate(selected);
+
+    if (selectedSeva?.blockOnSpecialDates) {
+      const blocked = specialSevas.flatMap((s) =>
+        (s.specificDates || s.dates || []).map((d) =>
+          typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d))
+      );
+      if (blocked.includes(dateKey)) return false;
+    }
+
+    const sub = selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose);
+    return !!(selectedSubPurpose && sub && sub.slots > 0);
+  }, [selectedSeva, selectedSubPurpose, specialSevas, isMultiDateSelectable]);
+
+  /* ==========================================
      RESET
   ========================================== */
   const resetSelections = () => {
@@ -365,10 +456,13 @@ export default function PurposeDropdown() {
   const handleSevaChange = (e) => {
     const id = e.target.value;
     const found = sevaList.find((s) => (s._id || s.id) === id);
+    const newPricePerDate = (found?.allowMultiDate && found?.amountType === "fixed")
+      ? String(Number(found.amount || 0))
+      : "";
     setSelectedSeva(found || null);
     setSelectedSevaId(id);
     setAmount(""); setBaseAmount(found?.amountType === "fixed" ? Number(found.amount) : 0);
-    setSelectedSubPurpose(""); setPricePerDate("");
+    setSelectedSubPurpose(""); setPricePerDate(newPricePerDate);
     setGotra(""); setGotraCustom("");
     setPaymentType(""); setPayNowAmount(""); setAdvance(0);
     setBookingDate(null); setMultiDates([]);
@@ -380,24 +474,30 @@ export default function PurposeDropdown() {
       advance: 0, originalAdvance: 0,
       remainingAmount: found?.amountType === "fixed" ? Number(found.amount) : 0,
       bookingDate: "", paymentType: "", selectedSubPurpose: "",
-      gotra: "", pricePerDate: "", multiDates: [], status: "Pending",
+      gotra: "", pricePerDate: newPricePerDate, multiDates: [],
+      allowMultiDate: found?.allowMultiDate || false,
+      status: "Pending",
     });
   };
 
   const handleSpecialSevaChange = (e) => {
     const id = e.target.value;
     const found = specialSevas.find((s) => (s._id || s.id) === id);
+    const noSubFixed = found && !found.hasSubPurposes && found.amountType === "fixed";
+    const fixedAmt = noSubFixed ? Number(found.amount || 0) : 0;
     setSelectedSpecialSeva(found || null);
     setSelectedSeva(null); setSelectedSevaId("");
     setSelectedSpecialSubPurpose("");
-    setAmount(""); setBaseAmount(0);
+    setAmount(""); setBaseAmount(fixedAmt);
     setPaymentType(""); setPayNowAmount(""); setAdvance(0);
-    setBookingDate(null);
+    setBookingDate(null); setMultiDates([]);
     saveToLocalStorage({
       selectedSpecialSevaId: id,
-      purpose: "", baseAmount: 0, amount: 0,
-      advance: 0, remainingAmount: 0, bookingDate: "",
-      paymentType: "", selectedSpecialSubPurpose: "",
+      purpose: found && !found.hasSubPurposes ? (found.displayName || "") : "",
+      amountType: found?.amountType || "",
+      baseAmount: fixedAmt, amount: fixedAmt,
+      advance: 0, remainingAmount: fixedAmt,
+      bookingDate: "", paymentType: "", selectedSpecialSubPurpose: "",
     });
   };
 
@@ -405,7 +505,7 @@ export default function PurposeDropdown() {
   const handleSpecialSubPurposeChange = (e) => {
     const name = e.target.value;
     setSelectedSpecialSubPurpose(name);
-    setPaymentType(""); setPayNowAmount(""); setAdvance(0); setBookingDate(null);
+    setPaymentType(""); setPayNowAmount(""); setAdvance(0); setBookingDate(null); setMultiDates([]);
     setAmount("");
 
     if (!name) {
@@ -474,11 +574,19 @@ export default function PurposeDropdown() {
     setAmount(value);
     const n = Number(value ?? 0);
     setBaseAmount(n);
-    saveToLocalStorage({
+    const updates = {
       amount: n, baseAmount: n,
       advance: paymentType === "full" ? n : Number(savedData.advance ?? 0),
       bookingDate: bookingDate ? toDBDate(bookingDate) : "",
-    });
+    };
+    if (selectedSeva?.allowMultiDate) {
+      setPricePerDate(value);
+      updates.pricePerDate = value;
+      // reset multi-date selections when price changes
+      setMultiDates([]);
+      updates.multiDates = [];
+    }
+    saveToLocalStorage(updates);
   };
 
   const handleGotraChange = (val) => {
@@ -539,6 +647,25 @@ export default function PurposeDropdown() {
     });
   };
 
+  const handleSpecialMultiDateToggle = (date) => {
+    if (!date) return;
+    const dateStr = toDBDate(date);
+    const exists = multiDates.some((d) => toDBDate(d) === dateStr);
+    const newDates = exists
+      ? multiDates.filter((d) => toDBDate(d) !== dateStr)
+      : [...multiDates, date];
+    setMultiDates(newDates);
+    const priceEach = Number(amount || specialDisplayAmount || 0);
+    const newTotal = priceEach * newDates.length;
+    setBaseAmount(newTotal);
+    saveToLocalStorage({
+      multiDates: newDates.map(toDBDate),
+      pricePerDate: String(priceEach),
+      amount: newTotal, baseAmount: newTotal,
+      advance: newTotal, remainingAmount: 0,
+    });
+  };
+
   /* ==========================================
      TOOLTIP HELPER
   ========================================== */
@@ -556,14 +683,16 @@ export default function PurposeDropdown() {
   /* ==========================================
      DATE PICKER PROPS
   ========================================== */
+  const allSpecialEventDates = specialSevas
+    .flatMap((s) =>
+      (s.specificDates || s.dates || []).map((d) =>
+        safeDate(typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d))
+      )
+    )
+    .filter(Boolean);
+
   const blockedSpecialDates = selectedSeva?.blockOnSpecialDates
-    ? specialSevas
-        .flatMap((s) =>
-          (s.specificDates || s.dates || []).map((d) =>
-            safeDate(typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d))
-          )
-        )
-        .filter(Boolean)
+    ? allSpecialEventDates
     : [];
 
   const regularDatePickerProps = {
@@ -577,16 +706,21 @@ export default function PurposeDropdown() {
     required: true,
     isClearable: true,
     calendarClassName: "pd-calendar",
-    highlightDates: blockedSpecialDates.length > 0
-      ? [{ "react-datepicker__day--utsav-blocked": blockedSpecialDates }]
-      : [],
+    highlightDates: [
+      ...(allSpecialEventDates.length > 0 ? [{ "react-datepicker__day--highlighted": allSpecialEventDates }] : []),
+      ...(blockedSpecialDates.length > 0 ? [{ "react-datepicker__day--utsav-blocked": blockedSpecialDates }] : []),
+    ],
     renderDayContents: (day, date) => {
       const specialName = getSpecialEventNameForDate(date);
+      const slotsFull = isRegularDateSlotsFull(date);
+      const tooltipTitle = specialName
+        ? selectedSeva?.blockOnSpecialDates
+          ? `🚫 ${specialName} — Date reserved for special event`
+          : specialName
+        : slotsFull ? "Slots are full" : "";
       return (
         <span
-          title={specialName && selectedSeva?.blockOnSpecialDates
-            ? `🚫 ${specialName} — Date reserved for special event`
-            : ""}
+          title={tooltipTitle}
           style={{ display: "block", width: "100%", height: "100%" }}
         >
           {day}
@@ -621,28 +755,111 @@ export default function PurposeDropdown() {
     highlightDates: specialSevaHighlightDates.length > 0
       ? [{ "react-datepicker__day--highlighted": specialSevaHighlightDates }]
       : [],
+    renderDayContents: (day, date) => {
+      const slotsFull = isSpecialDateSlotsFull(date);
+      const dateKey = toDBDate(new Date(date));
+      const isHighlighted = selectedSpecialSeva
+        ? (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || []).some(
+            (d) => (typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)) === dateKey
+          )
+        : false;
+      const tooltipTitle = isHighlighted
+        ? (selectedSpecialSeva?.displayName || "")
+        : slotsFull ? "Slots are full" : "";
+      return (
+        <span
+          title={tooltipTitle}
+          style={{ display: "block", width: "100%", height: "100%" }}
+        >
+          {day}
+        </span>
+      );
+    },
   };
 
-  const multiDatePickerProps = {
-    selected: null,
-    onChange: handleMultiDateToggle,
-    filterDate: isMultiDateSelectable,
+  const specialMultiDatePickerProps = {
+    inline: true,
+    onChange: handleSpecialMultiDateToggle,
+    filterDate: isSpecialDateSelectable,
     highlightDates: [
+      ...(specialSevaHighlightDates.length > 0 ? [{ "react-datepicker__day--highlighted": specialSevaHighlightDates }] : []),
       ...(multiDates.length > 0 ? [{ "react-datepicker__day--abhishek-selected": multiDates }] : []),
     ],
     minDate: new Date(),
-    dateFormat: "dd-MM-yyyy",
-    placeholderText: "Click dates to select/deselect",
-    className: "pd-date-input",
-    isClearable: false,
+    calendarClassName: "pd-calendar abhishek-calendar",
+    renderDayContents: (day, date) => {
+      const slotsFull = isSpecialDateSlotsFull(date);
+      const dateKey = toDBDate(new Date(date));
+      const isHighlighted = selectedSpecialSeva
+        ? (selectedSpecialSeva.specificDates || selectedSpecialSeva.dates || []).some(
+            (d) => (typeof d === "string" ? d.split("T")[0].trim() : toDBDate(d)) === dateKey
+          )
+        : false;
+      const tooltipTitle = isHighlighted
+        ? (selectedSpecialSeva?.displayName || "")
+        : slotsFull ? "Slots are full" : "";
+      return (
+        <span title={tooltipTitle} style={{ display: "block", width: "100%", height: "100%" }}>
+          {day}
+        </span>
+      );
+    },
+  };
+
+  const multiDatePickerProps = {
+    inline: true,
+    onChange: handleMultiDateToggle,
+    filterDate: isMultiDateSelectable,
+    highlightDates: [
+      ...(allSpecialEventDates.length > 0 ? [{ "react-datepicker__day--highlighted": allSpecialEventDates }] : []),
+      ...(blockedSpecialDates.length > 0 ? [{ "react-datepicker__day--utsav-blocked": blockedSpecialDates }] : []),
+      ...(multiDates.length > 0 ? [{ "react-datepicker__day--abhishek-selected": multiDates }] : []),
+    ],
+    minDate: new Date(),
     calendarClassName: "pd-calendar abhishek-calendar",
     renderDayContents: (day, date) => {
       const specialName = getSpecialEventNameForDate(date);
+      const slotsFull = isMultiDateSlotsFull(date);
+      const tooltipTitle = specialName
+        ? selectedSeva?.blockOnSpecialDates
+          ? `🚫 ${specialName} — Date reserved for special event`
+          : specialName
+        : slotsFull ? "Slots are full" : "";
       return (
         <span
-          title={specialName ? `🚫 ${specialName} — Date reserved for special event` : ""}
+          title={tooltipTitle}
           style={{ display: "block", width: "100%", height: "100%" }}
         >
+          {day}
+        </span>
+      );
+    },
+  };
+
+  /* ==========================================
+     MULTI-DATE PICKER PROPS — seva-level (uses isDateSelectable for proper date rules)
+  ========================================== */
+  const sevaMultiDatePickerProps = {
+    inline: true,
+    onChange: handleMultiDateToggle,
+    filterDate: isDateSelectable,
+    highlightDates: [
+      ...(allSpecialEventDates.length > 0 ? [{ "react-datepicker__day--highlighted": allSpecialEventDates }] : []),
+      ...(blockedSpecialDates.length > 0 ? [{ "react-datepicker__day--utsav-blocked": blockedSpecialDates }] : []),
+      ...(multiDates.length > 0 ? [{ "react-datepicker__day--abhishek-selected": multiDates }] : []),
+    ],
+    minDate: new Date(),
+    calendarClassName: "pd-calendar abhishek-calendar",
+    renderDayContents: (day, date) => {
+      const specialName = getSpecialEventNameForDate(date);
+      const slotsFull = isRegularDateSlotsFull(date);
+      const tooltipTitle = specialName
+        ? selectedSeva?.blockOnSpecialDates
+          ? `🚫 ${specialName} — Date reserved for special event`
+          : specialName
+        : slotsFull ? "Slots are full" : "";
+      return (
+        <span title={tooltipTitle} style={{ display: "block", width: "100%", height: "100%" }}>
           {day}
         </span>
       );
@@ -917,8 +1134,40 @@ export default function PurposeDropdown() {
                   {/* Booking date */}
                   {paymentType && (paymentType === "full" || Number(payNowAmount) > 0) && (
                     <div className="pd-field">
-                      <label className="pd-label">Booking Date / बुकिंग तारीख *</label>
-                      <DatePicker {...specialDatePickerProps} />
+                      {selectedSpecialSeva?.allowMultiDate ? (
+                        <>
+                          <label className="pd-label">
+                            Select Dates / तारखा निवडा *
+                            <span className="pd-label-hint"> — click to select/deselect</span>
+                          </label>
+                          <div className="pd-calendar-wrap">
+                            <DatePicker {...specialMultiDatePickerProps} />
+                          </div>
+                          {multiDates.length > 0 && (
+                            <>
+                              <div className="pd-date-tags">
+                                {multiDates.slice().sort((a, b) => a - b).map((date, i) => (
+                                  <span key={i} className="pd-date-tag">
+                                    {toDisplayDate(date)}
+                                    <button className="pd-date-tag__remove" onClick={() => handleSpecialMultiDateToggle(date)}>×</button>
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="pd-amount-row pd-amount-row--green">
+                                <span className="pd-amount-row__label">
+                                  Total — {multiDates.length} date{multiDates.length > 1 ? "s" : ""} × ₹{specialDisplayAmount.toLocaleString("en-IN")}
+                                </span>
+                                <span className="pd-amount-row__value">₹{(specialDisplayAmount * multiDates.length).toLocaleString("en-IN")}</span>
+                              </div>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <label className="pd-label">Booking Date / बुकिंग तारीख *</label>
+                          <DatePicker {...specialDatePickerProps} />
+                        </>
+                      )}
                     </div>
                   )}
                 </>
@@ -1016,14 +1265,61 @@ export default function PurposeDropdown() {
                 })())) && (
                 <>
                   <div className="pd-field">
-                    <label className="pd-label">Enter Amount / रक्कम टाका *</label>
+                    <label className="pd-label">
+                      {selectedSeva.allowMultiDate
+                        ? "Price Per Date / प्रति तारीख किंमत *"
+                        : "Enter Amount / रक्कम टाका *"}
+                    </label>
                     <input type="number" className="pd-input" placeholder="Enter amount" min="1" value={amount} onChange={handleAmountChange} />
                   </div>
-                  {Number(amount) > 0 && (
+                  {Number(amount) > 0 && !selectedSeva.allowMultiDate && (
                     <div className="pd-amount-row pd-amount-row--green">
                       <span className="pd-amount-row__label">Amount / रक्कम</span>
                       <span className="pd-amount-row__value">₹{Number(amount).toLocaleString("en-IN")}</span>
                     </div>
+                  )}
+                </>
+              )}
+
+              {/* ── Seva-level multi-date selection ── */}
+              {selectedSeva.allowMultiDate && (() => {
+                if (selectedSeva.amountType === "fixed") return true;
+                return Number(pricePerDate) > 0;
+              })() && (
+                <>
+                  {selectedSeva.amountType === "fixed" && (
+                    <div className="pd-readonly-field">
+                      <span className="pd-readonly-prefix">₹</span>
+                      <span className="pd-readonly-value">{Number(selectedSeva.amount).toLocaleString("en-IN")}</span>
+                      <span className="pd-readonly-badge">per date</span>
+                    </div>
+                  )}
+                  <div className="pd-field">
+                    <label className="pd-label">
+                      Select Dates / तारखा निवडा *
+                      <span className="pd-label-hint"> — click to select/deselect</span>
+                    </label>
+                    <div className="pd-calendar-wrap">
+                      <DatePicker {...sevaMultiDatePickerProps} />
+                    </div>
+                  </div>
+                  {multiDates.length > 0 && (
+                    <>
+                      <div className="pd-date-tags">
+                        {multiDates.slice().sort((a, b) => a - b).map((date, i) => (
+                          <span key={i} className="pd-date-tag">
+                            {toDisplayDate(date)}
+                            <button className="pd-date-tag__remove" onClick={() => handleMultiDateToggle(date)}>×</button>
+                          </span>
+                        ))}
+                      </div>
+                      <div className="pd-amount-row pd-amount-row--green">
+                        <span className="pd-amount-row__label">
+                          Total — {multiDates.length} date{multiDates.length > 1 ? "s" : ""} × ₹{Number(pricePerDate || selectedSeva.amount || 0).toLocaleString("en-IN")}
+                        </span>
+                        <span className="pd-amount-row__value">₹{multiDateTotal.toLocaleString("en-IN")}</span>
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -1071,6 +1367,7 @@ export default function PurposeDropdown() {
 
               {/* Payment type buttons */}
               {selectedSeva.dateRule !== "none" && !paymentType &&
+                !selectedSeva.allowMultiDate &&
                 (!selectedSeva.hasSubPurposes || selectedSubPurpose) && (() => {
                   const activeSub = selectedSeva.hasSubPurposes
                     ? selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose)
@@ -1104,7 +1401,7 @@ export default function PurposeDropdown() {
 
 
               {/* Advance payment input */}
-              {paymentType === "advance" && (
+              {paymentType === "advance" && !selectedSeva.allowMultiDate && (
                 <>
                   {isEditMode && (
                     <div className="pd-amount-row pd-amount-row--blue">
@@ -1125,6 +1422,7 @@ export default function PurposeDropdown() {
 
               {/* Single booking date */}
               {selectedSeva.dateRule !== "none" && (() => {
+                if (selectedSeva.allowMultiDate) return false;
                 if (selectedSeva.hasSubPurposes) {
                   if (!selectedSubPurpose) return false;
                   const sub = selectedSeva.subPurposes?.find((s) => s.name === selectedSubPurpose);
