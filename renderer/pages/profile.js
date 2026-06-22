@@ -13,6 +13,7 @@ function Profile() {
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
+  const [profileError, setProfileError] = useState("");
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -28,7 +29,7 @@ function Profile() {
         status:  data.profile.status  || "",
       });
     } catch (err) {
-      alert(err.message);
+      setProfileError(err.message || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ function Profile() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      alert(err.message);
+      setProfileError(err.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -188,6 +189,13 @@ function Profile() {
             </p>
 
             <div style={styles.divider} />
+
+            {/* Error message */}
+            {profileError && (
+              <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "8px", color: "#dc2626", padding: "10px 14px", margin: "8px 0", fontSize: "13px" }}>
+                ⚠️ {profileError}
+              </div>
+            )}
 
             {/* Save button */}
             <button

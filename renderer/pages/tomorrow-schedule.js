@@ -8,8 +8,8 @@ import apiRequest from "../services/api";
 function TomorrowSchedule() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPrintOptions, setShowPrintOptions] =
-    useState(false);
+  const [showPrintOptions, setShowPrintOptions] = useState(false);
+  const [fetchError, setFetchError] = useState("");
 
   /* ======================================================
      GET TOMORROW DATE
@@ -84,10 +84,7 @@ function TomorrowSchedule() {
             return;
           }
 
-          alert(
-            err.message ||
-              "Failed to load tomorrow's schedule"
-          );
+          setFetchError(err.message || "Failed to load tomorrow's schedule");
         } finally {
           setLoading(false);
         }
@@ -105,6 +102,12 @@ function TomorrowSchedule() {
 
       <div className="main">
         <Header title="Tomorrow's Schedule / उद्याचे वेळापत्रक" />
+
+        {fetchError && (
+          <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "8px 12px", margin: "10px 0", fontSize: "13px" }}>
+            ⚠️ {fetchError}
+          </div>
+        )}
 
         {/* Date */}
         <p className="date-text">

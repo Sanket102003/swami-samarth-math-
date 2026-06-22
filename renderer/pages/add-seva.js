@@ -50,6 +50,7 @@ function AddSeva() {
   const [sevaLoading, setSevaLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [sevaError, setSevaError] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [blockOnSpecialDates, setBlockOnSpecialDates] = useState(false);
   const [allowMultiDate, setAllowMultiDate] = useState(false);
@@ -243,7 +244,7 @@ function AddSeva() {
       await loadSevaList();
       resetForm();
     } catch (err) {
-      alert(err.message || "Failed to save seva");
+      setSevaError(err.message || "Failed to save seva");
     } finally {
       setSaving(false);
     }
@@ -264,7 +265,7 @@ function AddSeva() {
       ));
       showToast(newActive ? "✅ Seva activated" : "🚫 Seva deactivated");
     } catch (err) {
-      alert(err.message || "Failed to update seva");
+      setSevaError(err.message || "Failed to update seva");
     }
   };
 
@@ -282,7 +283,7 @@ function AddSeva() {
       if (editingId === id) resetForm();
       showToast("🗑 Seva deleted");
     } catch (err) {
-      alert(err.message || "Failed to delete");
+      setSevaError(err.message || "Failed to delete");
     }
   };
 
@@ -674,6 +675,12 @@ function AddSeva() {
         </div>
 
         {toast && <div className="toast">{toast}</div>}
+        {sevaError && (
+          <div style={{ position: "fixed", bottom: "80px", left: "50%", transform: "translateX(-50%)", background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "8px", color: "#dc2626", padding: "10px 18px", fontSize: "13px", zIndex: 1000, display: "flex", alignItems: "center", gap: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+            ⚠️ {sevaError}
+            <button onClick={() => setSevaError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: "16px", lineHeight: 1 }}>✕</button>
+          </div>
+        )}
       </div>
     </div>
   );

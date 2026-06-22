@@ -15,6 +15,7 @@ export default function Register() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState({ text: "", type: "" });
 
   /* ======================================================
      VALIDATION FUNCTIONS
@@ -62,6 +63,8 @@ export default function Register() {
     /* ==========================================
        REQUIRED FIELD VALIDATION
     ========================================== */
+    setMsg({ text: "", type: "" });
+
     if (
       !form.name.trim() ||
       !form.email.trim() ||
@@ -69,37 +72,22 @@ export default function Register() {
       !form.password.trim() ||
       !form.role
     ) {
-      alert("Please fill all required fields.");
+      setMsg({ text: "Please fill all required fields.", type: "error" });
       return;
     }
 
-    /* ==========================================
-       NAME VALIDATION
-    ========================================== */
     if (!validateName(form.name)) {
-      alert(
-        "Name should contain only letters and spaces."
-      );
+      setMsg({ text: "Name should contain only letters and spaces.", type: "error" });
       return;
     }
 
-    /* ==========================================
-       PHONE VALIDATION
-    ========================================== */
     if (!validatePhone(form.phone)) {
-      alert(
-        "Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9."
-      );
+      setMsg({ text: "Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.", type: "error" });
       return;
     }
 
-    /* ==========================================
-       EMAIL VALIDATION
-    ========================================== */
     if (!validateEmail(form.email)) {
-      alert(
-        "Please enter a valid email address."
-      );
+      setMsg({ text: "Please enter a valid email address.", type: "error" });
       return;
     }
 
@@ -127,12 +115,8 @@ export default function Register() {
       /* ==========================================
          SUCCESS
       ========================================== */
-      alert(
-        data.message ||
-          "Registered Successfully!"
-      );
-
-      router.push("/login");
+      setMsg({ text: data.message || "Registered Successfully! Redirecting...", type: "success" });
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
       console.error(
         "REGISTER ERROR:",
@@ -146,42 +130,14 @@ export default function Register() {
       /* ==========================================
          DUPLICATE EMAIL
       ========================================== */
-      if (
-        message
-          .toLowerCase()
-          .includes("email")
-      ) {
-        alert(
-          "This email is already registered."
-        );
-      }
-
-      /* ==========================================
-         DUPLICATE PHONE
-      ========================================== */
-      else if (
-        message
-          .toLowerCase()
-          .includes("phone")
-      ) {
-        alert(
-          "This mobile number is already registered."
-        );
-      }
-
-      /* ==========================================
-         GENERIC ERROR
-      ========================================== */
-      else if (
-        message
-          .toLowerCase()
-          .includes("already exists")
-      ) {
-        alert(
-          "User already exists."
-        );
+      if (message.toLowerCase().includes("email")) {
+        setMsg({ text: "This email is already registered.", type: "error" });
+      } else if (message.toLowerCase().includes("phone")) {
+        setMsg({ text: "This mobile number is already registered.", type: "error" });
+      } else if (message.toLowerCase().includes("already exists")) {
+        setMsg({ text: "User already exists.", type: "error" });
       } else {
-        alert(message);
+        setMsg({ text: message, type: "error" });
       }
     } finally {
       setLoading(false);
@@ -247,6 +203,18 @@ export default function Register() {
             value={form.role}
             onChange={handleChange}
           />
+
+          {/* Inline message */}
+          {msg.text && (
+            <div style={{
+              background: msg.type === "success" ? "#dcfce7" : "#fee2e2",
+              border: `1px solid ${msg.type === "success" ? "#22c55e" : "#ef4444"}`,
+              color: msg.type === "success" ? "#15803d" : "#dc2626",
+              borderRadius: "6px", padding: "8px 12px", margin: "10px 0", fontSize: "13px",
+            }}>
+              {msg.type === "success" ? "✓" : "⚠️"} {msg.text}
+            </div>
+          )}
 
           {/* Submit Button */}
           <button

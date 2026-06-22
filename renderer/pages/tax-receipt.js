@@ -65,7 +65,8 @@ export default function TaxReceipt() {
 
     const launch = () => {
       if (typeof window.Cashfree === "undefined") { setTimeout(launch, 150); return; }
-      const cashfree = window.Cashfree({ mode: "sandbox" }); // change to "production" for live
+      const cfMode = process.env.NEXT_PUBLIC_CASHFREE_MODE || "production";
+      const cashfree = window.Cashfree({ mode: cfMode });
       cashfree.checkout({ paymentSessionId, redirectTarget: "_modal" })
         .then((result) => {
           if (result?.error) {

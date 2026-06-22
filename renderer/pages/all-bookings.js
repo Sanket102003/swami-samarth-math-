@@ -14,6 +14,8 @@ function AllBookings() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const [pageError, setPageError] = useState("");
+  const [cancelMsg, setCancelMsg] = useState({ text: "", type: "" });
 
   const tableRef = useRef(null);
   const headerRef = useRef(null);
@@ -66,7 +68,7 @@ function AllBookings() {
           localStorage.clear();
           window.location.href = "/login";
         } else {
-          alert(err.message || "Failed to load bookings");
+          setPageError(err.message || "Failed to load bookings");
         }
       } finally {
         setLoading(false);
@@ -94,7 +96,7 @@ function AllBookings() {
   ====================================================== */
   const confirmCancel = async () => {
     if (!cancelReason.trim()) {
-      alert("Please enter cancellation reason");
+      setCancelMsg({ text: "Please enter cancellation reason", type: "error" });
       return;
     }
     try {
@@ -111,10 +113,10 @@ function AllBookings() {
       );
       setConfirmId(null);
       setCancelReason("");
-      alert("Booking cancelled successfully");
+      setCancelMsg({ text: "Booking cancelled successfully", type: "success" });
     } catch (err) {
       console.error("Cancel booking error:", err);
-      alert(err.message || "Failed to cancel booking");
+      setCancelMsg({ text: err.message || "Failed to cancel booking", type: "error" });
     }
   };
 
@@ -155,6 +157,26 @@ function AllBookings() {
 
       <div className="db-main">
         <Header title="All Bookings / सर्व बुकिंग" />
+
+        {/* PAGE ERROR */}
+        {pageError && (
+          <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "8px 12px", margin: "10px 0", fontSize: "13px" }}>
+            ⚠️ {pageError}
+          </div>
+        )}
+
+        {/* CANCEL SUCCESS/ERROR */}
+        {cancelMsg.text && (
+          <div style={{
+            background: cancelMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+            border: `1px solid ${cancelMsg.type === "success" ? "#22c55e" : "#ef4444"}`,
+            color: cancelMsg.type === "success" ? "#15803d" : "#dc2626",
+            borderRadius: "6px", padding: "8px 12px", margin: "10px 0", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <span>{cancelMsg.type === "success" ? "✓" : "⚠️"} {cancelMsg.text}</span>
+            <button onClick={() => setCancelMsg({ text: "", type: "" })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px" }}>✕</button>
+          </div>
+        )}
 
         {/* SEARCH BOX */}
         <div className="ab-search-box">
@@ -283,6 +305,11 @@ function AllBookings() {
         <div className="ab-modal-overlay">
           <div className="ab-modal">
             <p>Enter cancellation reason</p>
+            {cancelMsg.type === "error" && cancelMsg.text && (
+              <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "6px 10px", fontSize: "12px", margin: "6px 0" }}>
+                ⚠️ {cancelMsg.text}
+              </div>
+            )}
             <textarea
               className="input"
               rows="4"

@@ -8,6 +8,7 @@ function NewBooking() {
   const router = useRouter();
   const [selected, setSelected] = useState("");
   const [role, setRole] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   /* ======================================================
      LOAD USER ROLE
@@ -22,9 +23,10 @@ function NewBooking() {
   ====================================================== */
   const handleContinue = () => {
     if (!selected) {
-      alert("Please select receipt type");
+      setErrorMsg("Please select receipt type / कृपया पावती प्रकार निवडा");
       return;
     }
+    setErrorMsg("");
 
     localStorage.setItem("receiptType", selected);
 
@@ -71,6 +73,13 @@ function NewBooking() {
             </div>
 
           </div>
+
+          {/* ERROR MESSAGE */}
+          {errorMsg && (
+            <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "8px 12px", margin: "10px 0", fontSize: "13px" }}>
+              ⚠️ {errorMsg}
+            </div>
+          )}
 
           {/* CONTINUE BUTTON */}
           <div className="nb-continue">

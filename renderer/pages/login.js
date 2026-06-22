@@ -64,11 +64,6 @@ export default function Login() {
       // Save token + user data
       saveAuthData(result.data);
 
-      alert(
-        result.data?.message || "Login successful!"
-      );
-
-      // Redirect to dashboard
       router.push("/dashboard");
     } catch (err) {
       console.error("LOGIN ERROR:", err);

@@ -11,6 +11,7 @@ function DashboardDetails() {
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   /* ======================================================
      PAGE TITLE
@@ -191,10 +192,7 @@ function DashboardDetails() {
           err
         );
 
-        alert(
-          err.message ||
-            "Failed to load details"
-        );
+        setFetchError(err.message || "Failed to load details");
       } finally {
         setLoading(false);
       }
@@ -285,6 +283,12 @@ return (
 
     <div className="main">
       <Header title={getTitle()} />
+
+      {fetchError && (
+        <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "8px 12px", margin: "10px 0", fontSize: "13px" }}>
+          ⚠️ {fetchError}
+        </div>
+      )}
 
       <button
         className="secondary-btn back-btn"

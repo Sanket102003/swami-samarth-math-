@@ -25,6 +25,7 @@ function Dashboard() {
   const [recentBookings, setRecentBookings] = useState([]);
   const [revenueByPurpose, setRevenueByPurpose] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   /* ======================================================
      FETCH DASHBOARD STATS
@@ -116,7 +117,7 @@ function Dashboard() {
           window.location.href = "/login";
           return;
         }
-        alert(err.message || "Failed to load dashboard");
+        setFetchError(err.message || "Failed to load dashboard");
       } finally {
         setLoading(false);
       }
@@ -149,6 +150,12 @@ function Dashboard() {
 
       <div className="db-main">
         <Header title="Dashboard / मुख्यपृष्ठ" />
+
+        {fetchError && (
+          <div style={{ background: "#fee2e2", border: "1px solid #ef4444", borderRadius: "6px", color: "#dc2626", padding: "8px 12px", margin: "10px 0", fontSize: "13px" }}>
+            ⚠️ {fetchError}
+          </div>
+        )}
 
         {/* ===== STAT CARDS ===== */}
         <div className="db-cards">

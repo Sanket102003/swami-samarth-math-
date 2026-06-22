@@ -34,6 +34,21 @@ async function createWindow() {
     }
   );
 
+  // Spoof Origin/Referer for Cashfree so it sees the whitelisted production domain
+  // instead of localhost:8888 (dev) or app://localhost (production build)
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ["https://*.cashfree.com/*"] },
+    (details, callback) => {
+      callback({
+        requestHeaders: {
+          ...details.requestHeaders,
+          "Origin":  "https://www.swamisamrathbhuigaon.com",
+          "Referer": "https://www.swamisamrathbhuigaon.com/",
+        },
+      });
+    }
+  );
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,

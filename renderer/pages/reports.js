@@ -17,6 +17,7 @@ function Reports() {
   const [amountOperator, setAmountOperator] = useState("");
   const [amountValue, setAmountValue] = useState("");
   const [loading, setLoading] = useState(true);
+  const [reportMsg, setReportMsg] = useState({ text: "", type: "" });
 
   const purposeOptions = [{ name: "All" }, ...purposes];
 
@@ -53,7 +54,7 @@ function Reports() {
       setReportData(data.reports || []);
     } catch (err) {
       console.error("Reports fetch error:", err);
-      if (showAlert) alert(err.message || "Unable to connect to the server");
+      if (showAlert) setReportMsg({ text: err.message || "Unable to connect to the server", type: "error" });
       setReportData([]);
     }
   };
@@ -94,7 +95,7 @@ function Reports() {
   const handleDownload = () => {
     try {
       if (!filteredData || filteredData.length === 0) {
-        alert("No report data found for the selected filters.");
+        setReportMsg({ text: "No report data found for the selected filters.", type: "error" });
         return;
       }
 
@@ -138,7 +139,7 @@ function Reports() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("CSV download error:", err);
-      alert("Failed to download report.");
+      setReportMsg({ text: "Failed to download report.", type: "error" });
     }
   };
 
@@ -288,6 +289,20 @@ function Reports() {
         <Header title="Reports / अहवाल" />
 
         <p className="page-subtitle">Swami Samarth Math, Bhuigaon-Vasai</p>
+
+        {/* INLINE MESSAGE */}
+        {reportMsg.text && (
+          <div style={{
+            background: reportMsg.type === "success" ? "#dcfce7" : "#fee2e2",
+            border: `1px solid ${reportMsg.type === "success" ? "#22c55e" : "#ef4444"}`,
+            color: reportMsg.type === "success" ? "#15803d" : "#dc2626",
+            borderRadius: "6px", padding: "8px 12px", margin: "10px 0", fontSize: "13px",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <span>{reportMsg.type === "success" ? "✓" : "⚠️"} {reportMsg.text}</span>
+            <button onClick={() => setReportMsg({ text: "", type: "" })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px" }}>✕</button>
+          </div>
+        )}
 
         {/* ── STATS ── */}
         <div className="reports-stats">
