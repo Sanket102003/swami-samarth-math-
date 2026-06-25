@@ -72,7 +72,7 @@ export default function InternalReceipt() {
     let remainingAmount = Number(savedForm.remainingAmount || 0);
 
     const normalizedPurpose = normalizePurpose(savedForm.purpose);
-    const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
+    const isAdvanceAllowed = savedForm.paymentOptions === "full_advance" || ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
 
     let status = "Approved";
     if (isAdvanceAllowed) {

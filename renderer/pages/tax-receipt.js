@@ -144,7 +144,7 @@ export default function TaxReceipt() {
     let remainingAmount = Number(savedForm.remainingAmount || 0);
 
     const normalizedPurpose = normalizePurpose(savedForm.purpose);
-    const isAdvanceAllowed = ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
+    const isAdvanceAllowed = savedForm.paymentOptions === "full_advance" || ADVANCE_ALLOWED_PURPOSES.includes(normalizedPurpose);
 
     let status = "Approved";
     if (isAdvanceAllowed) {
@@ -195,11 +195,12 @@ export default function TaxReceipt() {
         if (!orderId) { showErr("Failed to create pending booking. Please try again."); return; }
 
         // Step 2: Create Cashfree payment order using orderId as reference
+        // Use advance amount (what user is paying now), not the total seva amount
         const orderRes = await apiRequest("/create_payment_order", {
           method: "POST",
           body: JSON.stringify({
             bank: selectedBank,
-            amount,
+            amount: advance,
             orderId,
             customerName: savedForm.name?.trim(),
             customerPhone: savedForm.phone?.trim(),

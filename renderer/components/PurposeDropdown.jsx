@@ -476,6 +476,7 @@ export default function PurposeDropdown() {
       bookingDate: "", paymentType: "", selectedSubPurpose: "",
       gotra: "", pricePerDate: newPricePerDate, multiDates: [],
       allowMultiDate: found?.allowMultiDate || false,
+      paymentOptions: found?.paymentOptions || "full",
       status: "Pending",
     });
   };
@@ -498,6 +499,7 @@ export default function PurposeDropdown() {
       baseAmount: fixedAmt, amount: fixedAmt,
       advance: 0, remainingAmount: fixedAmt,
       bookingDate: "", paymentType: "", selectedSpecialSubPurpose: "",
+      paymentOptions: found?.paymentOptions || "full",
     });
   };
 
@@ -536,6 +538,7 @@ export default function PurposeDropdown() {
         baseAmount: fixedAmt, amount: fixedAmt,
         advance: 0, remainingAmount: fixedAmt,
         bookingDate: "", paymentType: "",
+        paymentOptions: sub.paymentOptions || selectedSpecialSeva?.paymentOptions || "full",
       });
     } else {
       // No sub-purposes — use special seva directly
@@ -550,6 +553,7 @@ export default function PurposeDropdown() {
         baseAmount: fixedAmt, amount: fixedAmt,
         advance: 0, remainingAmount: fixedAmt,
         bookingDate: "", paymentType: "",
+        paymentOptions: selectedSpecialSeva?.paymentOptions || "full",
       });
     }
   };
@@ -566,6 +570,7 @@ export default function PurposeDropdown() {
       pricePerDate: price,
       multiDates: [], bookingDate: "",
       amount: 0, baseAmount: 0, advance: 0, remainingAmount: 0,
+      paymentOptions: sub?.paymentOptions || selectedSeva?.paymentOptions || "full",
     });
   };
 
