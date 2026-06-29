@@ -54,13 +54,13 @@ function NewBooking() {
 
           <div className="nb-receipt-options">
 
-            {/* INTERNAL RECEIPT */}
+            {/* SHREE SWAMI SAMARTH RECEIPT */}
             <div
               className={`nb-receipt-card ${selected === "internal" ? "nb-active" : ""}`}
               onClick={() => setSelected("internal")}
             >
-              <h4>Internal Receipt</h4>
-              <p>अंतर्गत पावती (Cash)</p>
+              <h4>Shree Swami Samarth Receipt</h4>
+              <p>श्री स्वामी समर्थ पावती (रोख)</p>
             </div>
 
             {/* TAX RECEIPT */}
