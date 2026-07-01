@@ -36,12 +36,18 @@ export default function TaxReceipt() {
   const [chequeDate, setChequeDate] = useState("");
 
   const visibleBanks = is80G
+
     ? ALL_BANKS
     : ALL_BANKS.filter((b) => b.id !== "SBI Bank");
 
   const isChequeSelected = selectedBank === "Cheque";
 
+  // Cheque derived values
+  const chequeNo = chequeNumber || "";
+  const showCheque = isChequeSelected && chequeNo;
+
   const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
+
   const normalizePurpose = (p = "") => String(p).split("/")[0].trim().toLowerCase();
 
   const validateName  = (n) => /^[A-Za-z\s]+$/.test(n.trim());
@@ -255,12 +261,7 @@ export default function TaxReceipt() {
             <span>Booking Details</span>
           </div>
         </div>
-
-        {/* RECEIPT BADGE */}
-        <div className="tr-receipt-badge">
-          🧾 Income Tax Receipt / आयकर पावती (Online)
-        </div>
-
+        
         {/* PAYMENT DETAILS CARD */}
         <div className="tr-card">
           <div className="tr-card-header">
@@ -447,10 +448,13 @@ export default function TaxReceipt() {
           <button className="secondary-btn" onClick={() => router.push("/new-booking")} disabled={loading || showPayment}>
             ← Back / मागे
           </button>
-          <button className="primary-btn" onClick={handleCreateBooking} disabled={loading || showPayment}>
+          <button type="button" className="primary-btn" onClick={handleCreateBooking} disabled={loading || showPayment}>
             {loading ? "Processing..." : "Create Booking / बुकिंग करा ✓"}
           </button>
+
+
         </div>
+
       </div>
     </div>
   );

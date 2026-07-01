@@ -103,7 +103,14 @@ export default function ReceiptPrint() {
   const gotra        = booking.gotra || "";
   const paymentMode  = booking.bank || booking.paymentType || "";  // Cash / UPI / Cheque
 
+  // Cheque / UPI refs
+  const chequeNo = booking.chequeNumber || "";
+  const utrNo    = booking.utrNumber || "";
+  const showCheque = paymentMode === "Cheque" && chequeNo;
+  const showUTR    = paymentMode === "UPI" && utrNo;
+
   // Paid amount (advance or full)
+
   const paidAmt      = booking.paidAmount ?? booking.advance ?? booking.amount ?? 0;
   const paidDisplay  = formatAmount(paidAmt);
   const paidWords    = numberToWordsMarathi(paidAmt);
@@ -220,6 +227,18 @@ export default function ReceiptPrint() {
             top: 75mm; left: 10mm;
             font-size: 10pt; font-weight: bold;
           }
+
+          /* Cheque No (only when payment mode is Cheque) */
+          .r-chequeno {
+            top: 81mm; left: 10mm;
+            font-size: 10pt; font-weight: bold;
+          }
+
+          .r-utrno {
+            top: 81mm; left: 10mm;
+            font-size: 10pt; font-weight: bold;
+          }
+
         }
       `}</style>
 
@@ -248,8 +267,22 @@ export default function ReceiptPrint() {
           <div className="r-row"><span className="r-label">Balance: </span>₹ {balanceDisplay}</div>
         )}
 
+        {/* SCREEN PREVIEW ROWS */}
+        {showCheque && (
+          <div className="r-row">
+            <span className="r-label">Cheque No: </span>{chequeNo}
+          </div>
+        )}
+        {showUTR && (
+          <div className="r-row">
+            <span className="r-label">UTR No: </span>{utrNo}
+          </div>
+        )}
+
         {/* PRINT-ONLY FIELDS — absolutely positioned onto physical card */}
+
         <div className="print-only r-receiptno">{receiptNo}</div>
+
         <div className="print-only r-date">{date}</div>
         <div className="print-only r-name">{name}</div>
         <div className="print-only r-address">{address}</div>
@@ -258,7 +291,18 @@ export default function ReceiptPrint() {
         <div className="print-only r-amountwords">{paidWords}</div>
         <div className="print-only r-gotra">{gotra}</div>
         <div className="print-only r-paymentmode">{paymentMode}</div>
+        {showCheque && (
+          <div className="print-only r-chequeno">धनादेश क्र.: {chequeNo}</div>
+        )}
+
+        {showUTR && (
+          <div className="print-only r-utrno">UTR: {utrNo}</div>
+        )}
+
+
         <div className="print-only r-amount">{paidDisplay}/-</div>
+
+
 
         {/* Balance — only printed if advance booking */}
         {hasBalance && (

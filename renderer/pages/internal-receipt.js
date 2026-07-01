@@ -139,12 +139,7 @@ export default function InternalReceipt() {
             <span>Booking Details</span>
           </div>
         </div>
-
-        {/* RECEIPT BADGE */}
-        <div className="ir-receipt-badge">
-          🧾 Internal Receipt / अंतर्गत पावती (Cash)
-        </div>
-
+        
         {/* CASH PAYMENT INDICATOR */}
         <div className="tr-card">
           <div className="tr-card-header">

@@ -18,6 +18,8 @@ function Reports() {
   const [amountValue, setAmountValue] = useState("");
   const [loading, setLoading] = useState(true);
   const [reportMsg, setReportMsg] = useState({ text: "", type: "" });
+  const [viewType, setViewType] = useState("All Details");
+
 
   const purposeOptions = [{ name: "All" }, ...purposes];
 
@@ -92,12 +94,14 @@ function Reports() {
   /* ======================================================
      CSV DOWNLOAD
   ====================================================== */
-  const handleDownload = () => {
+  const handleDownload = (data = []) => {
     try {
-      if (!filteredData || filteredData.length === 0) {
+      if (!data || data.length === 0) {
         setReportMsg({ text: "No report data found for the selected filters.", type: "error" });
         return;
       }
+
+
 
       const headers = [
         "Booking ID", "Name", "Phone", "Purpose",
@@ -105,7 +109,8 @@ function Reports() {
         "Remaining Amount", "Status", "Booking Date",
       ];
 
-      const rows = filteredData.map((item) => [
+      const rows = data.map((item) => [
+
         item.bookingId || "",
         item.name || "",
         item.phone || "",
@@ -172,12 +177,33 @@ function Reports() {
     return true;
   });
 
-  const { totalRevenue, totalBookings, pendingDues } = getCalculatedStats(filteredData);
+  // ViewType: when Devotee Details is selected, deduplicate by phone
+  const displayData = viewType === "Devotee Details"
+    ? filteredData.filter((item, index, self) =>
+        index === self.findIndex((t) => t.phone === item.phone)
+      )
+    : filteredData;
+
+  const { totalRevenue, totalBookings, pendingDues } = getCalculatedStats(displayData);
+
 
   // ── Reusable filter row config ──
   // Instead of repeating <div className="filter-left"> 4 times,
   // define the filters as data and render them in one map()
   const filters = [
+    {
+      label: "View Type",
+      element: (
+        <select
+          className="input"
+          value={viewType}
+          onChange={(e) => setViewType(e.target.value)}
+        >
+          <option value="All Details">All Details</option>
+          <option value="Devotee Details">Devotee Details</option>
+        </select>
+      ),
+    },
     {
       label: "Receipt Type",
       element: (
@@ -193,23 +219,8 @@ function Reports() {
       ),
     },
     {
-      label: "Purpose",
-      element: (
-        <select
-          className="input"
-          value={purpose}
-          onChange={(e) => setPurpose(e.target.value)}
-        >
-          {purposeOptions.map((item, index) => (
-            <option key={index} value={item.name}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-      ),
-    },
-    {
       label: "From Date",
+
       element: (
         <input
           type="date"
@@ -232,6 +243,7 @@ function Reports() {
     },
     {
       label: "Amount Filter",
+
       element: (
         <select
           className="input"
@@ -245,6 +257,7 @@ function Reports() {
         </select>
       ),
     },
+
     {
       label: "Amount (₹)",
       element: (
@@ -281,14 +294,21 @@ function Reports() {
     },
   ];
 
+  const devoteeColumns = [
+    { header: "Name",    render: (item) => item.name    || "-" },
+    { header: "Phone",   render: (item) => item.phone   || "-" },
+    { header: "Email",   render: (item) => item.email   || "-" },
+    { header: "Address", render: (item) => item.address || "-" },
+  ];
+
+  const activeColumns = viewType === "Devotee Details" ? devoteeColumns : columns;
+
   return (
     <div className="dashboard">
       <Sidebar />
 
       <div className="main">
         <Header title="Reports / अहवाल" />
-
-        <p className="page-subtitle">Swami Samarth Math, Bhuigaon-Vasai</p>
 
         {/* INLINE MESSAGE */}
         {reportMsg.text && (
@@ -349,8 +369,9 @@ function Reports() {
 
             <button
               className="download-report-btn"
-              onClick={handleDownload}
+              onClick={() => handleDownload(displayData)}
             >
+
               ⬇ Download Report
             </button>
           </div>
@@ -358,12 +379,13 @@ function Reports() {
 
         {/* ── RECORD COUNT ── */}
         <div className="reports-total">
-          Total Records: {filteredData.length}
-          {filteredData.length !== reportData.length && (
+          Total Records: {displayData.length}
+          {displayData.length !== reportData.length && (
             <span style={{ marginLeft: "10px", color: "#f97316", fontSize: "13px", fontWeight: 600 }}>
               (filtered from {reportData.length})
             </span>
           )}
+
         </div>
 
         {/* ── TABLE ── */}
@@ -371,15 +393,16 @@ function Reports() {
           <table className="report-table">
             <thead>
               <tr>
-                {columns.map(({ header }) => (
+                {activeColumns.map(({ header }) => (
                   <th key={header}>{header}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item, index) => (
+              {displayData.map((item, index) => (
+
                 <tr key={item._id || index}>
-                  {columns.map(({ header, render }) => (
+                  {activeColumns.map(({ header, render }) => (
                     <td key={header}>{render(item)}</td>
                   ))}
                 </tr>
