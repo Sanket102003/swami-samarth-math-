@@ -55,11 +55,15 @@ function AllBookings() {
     const fetchBookings = async () => {
       try {
         const data = await apiRequest("/Bookings");
-        if (Array.isArray(data)) {
-          setBookings(data);
-        } else {
-          setBookings(data.bookings || []);
-        }
+        const list = Array.isArray(data) ? data : (data.bookings || []);
+
+        const sorted = [...list].sort((a, b) => {
+          const dateA = new Date(a.createdAt || a._createdDate || 0);
+          const dateB = new Date(b.createdAt || b._createdDate || 0);
+          return dateB - dateA;
+        });
+
+        setBookings(sorted);
       } catch (err) {
         console.error("Bookings fetch error:", err);
         const errorMsg = (err.message || "").toLowerCase();

@@ -6,8 +6,39 @@ import Header from "../components/Header";
 export default function BookingSuccess() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
+  const [receiptId, setReceiptId] = useState("Loading...");
+  const rawId = router.query.id;
 
-  const receiptId = router.query.id || "Loading...";
+  const API_BASE = "https://www.swamisamrathbhuigaon.com/_functions";
+
+  useEffect(() => {
+    if (!rawId) return;
+
+    if (/^(C|BK|IT)-\d{2}-\d+$/.test(rawId)) {
+      setReceiptId(rawId);
+      return;
+    }
+
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`${API_BASE}/get_booking_by_order_id?orderId=${rawId}`);
+        const data = await res.json();
+        if (data.status === "confirmed") {
+          setReceiptId(data.bookingId);
+          clearInterval(poll);
+        } else if (attempts >= 10) {
+          clearInterval(poll);
+          setReceiptId("Processing — check All Bookings shortly");
+        }
+      } catch (e) {
+        console.error("poll booking error:", e);
+      }
+    }, 1500);
+
+    return () => clearInterval(poll);
+  }, [rawId]);
 
   useEffect(() => {
     const saved = JSON.parse(
