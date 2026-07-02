@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
+import apiRequest from "../services/api";
 
 export default function BookingSuccess() {
   const router = useRouter();
@@ -20,24 +21,33 @@ export default function BookingSuccess() {
     }
 
     let attempts = 0;
-    const poll = setInterval(async () => {
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
       attempts++;
       try {
-        const res = await fetch(`${API_BASE}/get_booking_by_order_id?orderId=${rawId}`);
-        const data = await res.json();
+        const data = await apiRequest(`/booking_by_order_id?orderId=${encodeURIComponent(rawId)}`);
         if (data.status === "confirmed") {
           setReceiptId(data.bookingId);
-          clearInterval(poll);
-        } else if (attempts >= 10) {
-          clearInterval(poll);
-          setReceiptId("Processing — check All Bookings shortly");
+          return;
         }
       } catch (e) {
         console.error("poll booking error:", e);
       }
-    }, 1500);
 
-    return () => clearInterval(poll);
+      if (attempts >= 15) {
+        setReceiptId("Processing — check All Bookings shortly");
+        return;
+      }
+
+      setTimeout(poll, 1500);
+    };
+
+    poll();
+    return () => {
+      cancelled = true;
+    };
   }, [rawId]);
 
   useEffect(() => {
