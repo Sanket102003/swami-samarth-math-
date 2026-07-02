@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import withAuth from "../utils/withAuth";
 import apiRequest from "../services/api";
+import Pagination from "../components/Pagination";
 
 function AllBookings() {
   const router = useRouter();
@@ -16,6 +17,8 @@ function AllBookings() {
   const [userRole, setUserRole] = useState(null);
   const [pageError, setPageError] = useState("");
   const [cancelMsg, setCancelMsg] = useState({ text: "", type: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
 
   const tableRef = useRef(null);
   const headerRef = useRef(null);
@@ -81,6 +84,7 @@ function AllBookings() {
      SEARCH FILTER
   ====================================================== */
   const filteredBookings = useMemo(() => {
+    setCurrentPage(1);
     const term = searchTerm.toLowerCase().trim();
     return bookings.filter(
       (booking) =>
@@ -90,6 +94,11 @@ function AllBookings() {
         String(booking._id || "").toLowerCase().includes(term)
     );
   }, [bookings, searchTerm]);
+
+  const pagedBookings = filteredBookings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   /* ======================================================
      CANCEL BOOKING
@@ -233,7 +242,7 @@ function AllBookings() {
 
                 {/* ROWS */}
                 <div className="ab-list">
-                  {filteredBookings.map((booking) => {
+                  {pagedBookings.map((booking) => {
                     const rowKey = booking._id || booking.id;
                     const status = booking.status || "Pending";
                     const statusLower = status.toLowerCase();
@@ -294,6 +303,13 @@ function AllBookings() {
               >
                 <div className="ab-scrollbar-inner" />
               </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredBookings.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
 
             </div>
           )}

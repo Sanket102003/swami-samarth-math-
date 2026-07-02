@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import StatCard from "../components/StatCard";
 import withAuth from "../utils/withAuth";
 import apiRequest from "../services/api";
+import Pagination from "../components/Pagination";
 
 import {
   FaCalendarAlt,
@@ -26,6 +27,8 @@ function Dashboard() {
   const [revenueByPurpose, setRevenueByPurpose] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [revPage, setRevPage] = useState(1);
+  const REV_PER_PAGE = 8;
 
   /* ======================================================
      FETCH DASHBOARD STATS
@@ -105,6 +108,7 @@ function Dashboard() {
 
         setRecentBookings(validRecentBookings.slice(0, 5));
         setRevenueByPurpose(revenueByPurpose);
+        setRevPage(1);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
         const errorMsg = (err.message || "").toLowerCase();
@@ -208,14 +212,24 @@ function Dashboard() {
                 <p>No revenue data available.</p>
               </div>
             ) : (
-              revenueByPurpose.map((item, index) => (
-                <div key={index} className="db-revenue-item">
-                  <p>
-                    <strong>{item.purpose}</strong>
-                  </p>
-                  <p>₹{Number(item.amount || 0).toLocaleString("en-IN")}</p>
-                </div>
-              ))
+              <>
+                {revenueByPurpose
+                  .slice((revPage - 1) * REV_PER_PAGE, revPage * REV_PER_PAGE)
+                  .map((item, index) => (
+                    <div key={index} className="db-revenue-item">
+                      <p>
+                        <strong>{item.purpose}</strong>
+                      </p>
+                      <p>₹{Number(item.amount || 0).toLocaleString("en-IN")}</p>
+                    </div>
+                  ))}
+                <Pagination
+                  currentPage={revPage}
+                  totalItems={revenueByPurpose.length}
+                  itemsPerPage={REV_PER_PAGE}
+                  onPageChange={setRevPage}
+                />
+              </>
             )}
           </div>
 

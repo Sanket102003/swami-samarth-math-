@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import withAuth from "../utils/withAuth";
 import apiRequest from "../services/api";
+import Pagination from "../components/Pagination";
 import { purposes } from "../constants/purposes";
 
 function Reports() {
@@ -19,7 +20,8 @@ function Reports() {
   const [loading, setLoading] = useState(true);
   const [reportMsg, setReportMsg] = useState({ text: "", type: "" });
   const [viewType, setViewType] = useState("All Details");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
 
   const purposeOptions = [{ name: "All" }, ...purposes];
 
@@ -41,6 +43,13 @@ function Reports() {
   }, []);
 
   /* ======================================================
+     RESET PAGE WHEN VIEW TYPE / AMOUNT FILTER CHANGES
+  ====================================================== */
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [viewType, amountOperator, amountValue]);
+
+  /* ======================================================
      FETCH FILTERED REPORTS
   ====================================================== */
   const fetchReports = async (showAlert = true) => {
@@ -54,6 +63,7 @@ function Reports() {
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiRequest(`/reports${query}`);
       setReportData(data.reports || []);
+      setCurrentPage(1);
     } catch (err) {
       console.error("Reports fetch error:", err);
       if (showAlert) setReportMsg({ text: err.message || "Unable to connect to the server", type: "error" });
@@ -184,6 +194,11 @@ function Reports() {
       )
     : filteredData;
 
+  const pagedData = displayData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const { totalRevenue, totalBookings, pendingDues } = getCalculatedStats(displayData);
 
 
@@ -213,7 +228,7 @@ function Reports() {
           onChange={(e) => setReceiptType(e.target.value)}
         >
           <option value="All">All Receipts</option>
-          <option value="Internal">Internal Receipt</option>
+          <option value="Internal">Shree Swami Samarth Receipt</option>
           <option value="Tax">Income Tax Receipt</option>
         </select>
       ),
@@ -385,7 +400,11 @@ function Reports() {
               (filtered from {reportData.length})
             </span>
           )}
-
+          {displayData.length > ITEMS_PER_PAGE && (
+            <span style={{ marginLeft: "10px", color: "#6b7280", fontSize: "13px" }}>
+              — Page {currentPage} of {Math.ceil(displayData.length / ITEMS_PER_PAGE)}
+            </span>
+          )}
         </div>
 
         {/* ── TABLE ── */}
@@ -399,7 +418,7 @@ function Reports() {
               </tr>
             </thead>
             <tbody>
-              {displayData.map((item, index) => (
+              {pagedData.map((item, index) => (
 
                 <tr key={item._id || index}>
                   {activeColumns.map(({ header, render }) => (
@@ -410,6 +429,13 @@ function Reports() {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={displayData.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import withAuth from "../utils/withAuth";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import apiRequest from "../services/api";
+import Pagination from "../components/Pagination";
 
 /* ============================================================
    CONSTANTS
@@ -49,6 +50,8 @@ function AddSeva() {
   const [sevaList, setSevaList] = useState([]);
   const [sevaLoading, setSevaLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sevaPage, setSevaPage] = useState(1);
+  const SEVA_PER_PAGE = 8;
   const [toast, setToast] = useState("");
   const [sevaError, setSevaError] = useState("");
   const [isActive, setIsActive] = useState(true);
@@ -92,8 +95,10 @@ function AddSeva() {
         return localFlags[key] ? { ...s, ...localFlags[key] } : s;
       });
       setSevaList(merged);
+      setSevaPage(1);
     } catch {
       setSevaList([]);
+      setSevaPage(1);
     } finally {
       setSevaLoading(false);
     }
@@ -297,6 +302,11 @@ function AddSeva() {
     { num: 4, label: "Payment" },
     { num: 5, label: "Date Rules" },
   ];
+
+  const pagedSevaList = sevaList.slice(
+    (sevaPage - 1) * SEVA_PER_PAGE,
+    sevaPage * SEVA_PER_PAGE
+  );
 
   /* ============================================================
      UI
@@ -586,91 +596,100 @@ function AddSeva() {
           ) : sevaList.length === 0 ? (
             <p style={{ color: "#999", padding: "12px 0" }}>No sevas added yet.</p>
           ) : (
-            <div className="as-seva-list">
-              {sevaList.map((seva) => {
-                const id = seva._id || seva.id;
-                const isBeingEdited = editingId === id;
-                return (
-                  <div
-                    key={id}
-                    className="as-seva-item"
-                    style={{
-                      background: isBeingEdited ? "#fff7ed" : undefined,
-                      border: isBeingEdited ? "1px solid #fed7aa" : undefined,
-                      borderRadius: isBeingEdited ? "10px" : undefined,
-                    }}
-                  >
-                    <div className="as-seva-info">
-                      <div className="as-seva-badge">
-                        {seva.eventType === "special" ? "✨ Special" : "📋 Regular"}
-                        {isBeingEdited && (
-                          <span style={{ marginLeft: "6px", color: "#c2410c", fontSize: "11px", fontWeight: 700 }}>
-                            ✏️ Editing
+            <>
+              <div className="as-seva-list">
+                {pagedSevaList.map((seva) => {
+                  const id = seva._id || seva.id;
+                  const isBeingEdited = editingId === id;
+                  return (
+                    <div
+                      key={id}
+                      className="as-seva-item"
+                      style={{
+                        background: isBeingEdited ? "#fff7ed" : undefined,
+                        border: isBeingEdited ? "1px solid #fed7aa" : undefined,
+                        borderRadius: isBeingEdited ? "10px" : undefined,
+                      }}
+                    >
+                      <div className="as-seva-info">
+                        <div className="as-seva-badge">
+                          {seva.eventType === "special" ? "✨ Special" : "📋 Regular"}
+                          {isBeingEdited && (
+                            <span style={{ marginLeft: "6px", color: "#c2410c", fontSize: "11px", fontWeight: 700 }}>
+                              ✏️ Editing
+                            </span>
+                          )}
+                        </div>
+                        <p className="as-seva-name">{seva.displayName}</p>
+                        <div className="as-seva-meta">
+                          <span>{seva.amountType === "fixed" ? `₹${Number(seva.amount || 0).toLocaleString("en-IN")} fixed` : "Flexible amount"}</span>
+                          <span>·</span>
+                          <span>{DATE_RULES.find((r) => r.key === seva.dateRule)?.label || seva.dateRule}</span>
+                          {seva.maxPerDate > 0 && <><span>·</span><span>Max {seva.maxPerDate}/date</span></>}
+                          <span>·</span>
+                          <span style={{ color: seva.isActive === false ? "#dc2626" : "#16a34a", fontWeight: 700 }}>
+                            {seva.isActive === false ? "🚫 Inactive" : "✅ Active"}
                           </span>
-                        )}
+                          {seva.blockOnSpecialDates && <><span>·</span><span style={{ color: "#f97316", fontWeight: 600 }}>🚫 Blocked on special dates</span></>}
+                        </div>
                       </div>
-                      <p className="as-seva-name">{seva.displayName}</p>
-                      <div className="as-seva-meta">
-                        <span>{seva.amountType === "fixed" ? `₹${Number(seva.amount || 0).toLocaleString("en-IN")} fixed` : "Flexible amount"}</span>
-                        <span>·</span>
-                        <span>{DATE_RULES.find((r) => r.key === seva.dateRule)?.label || seva.dateRule}</span>
-                        {seva.maxPerDate > 0 && <><span>·</span><span>Max {seva.maxPerDate}/date</span></>}
-                        <span>·</span>
-                        <span style={{ color: seva.isActive === false ? "#dc2626" : "#16a34a", fontWeight: 700 }}>
-                          {seva.isActive === false ? "🚫 Inactive" : "✅ Active"}
-                        </span>
-                        {seva.blockOnSpecialDates && <><span>·</span><span style={{ color: "#f97316", fontWeight: 600 }}>🚫 Blocked on special dates</span></>}
+
+                      {/* ── ACTION BUTTONS ── */}
+                      <div style={{ display: "flex", gap: "8px", flexShrink: 0, marginLeft: "12px" }}>
+
+                        {/* ✏️ EDIT BUTTON — new */}
+                        <button
+                          style={{
+                            background: isBeingEdited ? "#fff7ed" : "#f0f9ff",
+                            color: isBeingEdited ? "#c2410c" : "#0369a1",
+                            border: `1px solid ${isBeingEdited ? "#fed7aa" : "#bae6fd"}`,
+                            borderRadius: "8px",
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() => isBeingEdited ? resetForm() : handleEdit(seva)}
+                        >
+                          {isBeingEdited ? "✕ Cancel" : "✏️ Edit"}
+                        </button>
+
+                        {/* Activate / Deactivate */}
+                        <button
+                          style={{
+                            background: seva.isActive === false ? "#f0fdf4" : "#fff7ed",
+                            color: seva.isActive === false ? "#16a34a" : "#f97316",
+                            border: `1px solid ${seva.isActive === false ? "#bbf7d0" : "#fed7aa"}`,
+                            borderRadius: "8px",
+                            padding: "6px 12px",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                          onClick={() => handleToggleActive(id, seva.isActive)}
+                        >
+                          {seva.isActive === false ? "Activate" : "Deactivate"}
+                        </button>
+
+                        {/* Delete */}
+                        <button className="as-seva-delete" onClick={() => handleDelete(id)}>
+                          Delete
+                        </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* ── ACTION BUTTONS ── */}
-                    <div style={{ display: "flex", gap: "8px", flexShrink: 0, marginLeft: "12px" }}>
-
-                      {/* ✏️ EDIT BUTTON — new */}
-                      <button
-                        style={{
-                          background: isBeingEdited ? "#fff7ed" : "#f0f9ff",
-                          color: isBeingEdited ? "#c2410c" : "#0369a1",
-                          border: `1px solid ${isBeingEdited ? "#fed7aa" : "#bae6fd"}`,
-                          borderRadius: "8px",
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                        onClick={() => isBeingEdited ? resetForm() : handleEdit(seva)}
-                      >
-                        {isBeingEdited ? "✕ Cancel" : "✏️ Edit"}
-                      </button>
-
-                      {/* Activate / Deactivate */}
-                      <button
-                        style={{
-                          background: seva.isActive === false ? "#f0fdf4" : "#fff7ed",
-                          color: seva.isActive === false ? "#16a34a" : "#f97316",
-                          border: `1px solid ${seva.isActive === false ? "#bbf7d0" : "#fed7aa"}`,
-                          borderRadius: "8px",
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                        }}
-                        onClick={() => handleToggleActive(id, seva.isActive)}
-                      >
-                        {seva.isActive === false ? "Activate" : "Deactivate"}
-                      </button>
-
-                      {/* Delete */}
-                      <button className="as-seva-delete" onClick={() => handleDelete(id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+              <Pagination
+                currentPage={sevaPage}
+                totalItems={sevaList.length}
+                itemsPerPage={SEVA_PER_PAGE}
+                onPageChange={setSevaPage}
+              />
+            </>
           )}
         </div>
 

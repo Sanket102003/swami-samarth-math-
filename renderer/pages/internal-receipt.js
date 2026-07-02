@@ -143,7 +143,7 @@ export default function InternalReceipt() {
         {/* CASH PAYMENT INDICATOR */}
         <div className="tr-card">
           <div className="tr-card-header">
-            <div className="tr-card-icon">💵</div>
+            <div className="tr-card-icon"></div>
             <div>
               <p className="tr-card-title">Payment Method / पेमेंट पद्धत</p>
               <p className="tr-card-subtitle">Internal receipts accept cash only</p>
@@ -156,7 +156,7 @@ export default function InternalReceipt() {
               borderRadius: "10px", padding: "10px 18px",
               fontSize: "14px", fontWeight: 700, color: "#15803d",
             }}>
-              <span style={{ fontSize: "20px" }}>💵</span>
+              <span style={{ fontSize: "20px" }}></span>
               Cash / रोख
             </div>
           </div>

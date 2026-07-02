@@ -97,18 +97,6 @@
   background: #fafafa;
 }
 
-.tr-card-icon {
-  width: 36px;
-  height: 36px;
-  background: #eff6ff;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-  flex-shrink: 0;
-}
-
 .tr-card-title {
   font-size: 15px;
   font-weight: 700;
