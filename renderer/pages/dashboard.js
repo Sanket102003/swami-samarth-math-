@@ -49,11 +49,17 @@ function Dashboard() {
             (booking.status || "").toLowerCase().trim() === "approved"
         );
 
-        /* RECENT BOOKINGS - Approved + Pending only */
-        const validRecentBookings = allBookings.filter((booking) => {
-          const status = (booking.status || "").toLowerCase().trim();
-          return status === "approved" || status === "pending";
-        });
+        /* RECENT BOOKINGS - Approved + Pending only, sorted newest first */
+        const validRecentBookings = allBookings
+          .filter((booking) => {
+            const status = (booking.status || "").toLowerCase().trim();
+            return status === "approved" || status === "pending";
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.createdAt || a._createdDate || 0);
+            const dateB = new Date(b.createdAt || b._createdDate || 0);
+            return dateB - dateA;
+          });
 
         /* TOTAL REVENUE - ONLY APPROVED */
         const totalRevenue = approvedBookings.reduce(

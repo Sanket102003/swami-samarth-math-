@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import apiRequest from "../services/api";
 
 export default function DevoteeForm() {
+  const router = useRouter();
   const [form, setForm] = useState({
     smarnarth: "",
     name: "",
@@ -24,6 +26,25 @@ export default function DevoteeForm() {
       email: saved.email || "",
     });
   }, []);
+
+  // Clear saved devotee details when leaving the booking flow
+  // (going to another tab/page, or back and not returning into
+  // new-booking / internal-receipt / tax-receipt)
+  useEffect(() => {
+    // Only these count as "continuing the same booking" (step 2 pages).
+    // Going to /new-booking means restarting, so it should clear too.
+    const stepTwoPages = ["/internal-receipt", "/tax-receipt"];
+
+    const handleRouteChange = (url) => {
+      const stillInFlow = stepTwoPages.some((p) => url.startsWith(p));
+      if (!stillInFlow) {
+        localStorage.removeItem("bookingForm");
+      }
+    };
+
+    router.events.on("routeChangeStart", handleRouteChange);
+    return () => router.events.off("routeChangeStart", handleRouteChange);
+  }, [router]);
 
   const updateForm = (field, value) => {
     const updated = { ...form, [field]: value };

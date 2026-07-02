@@ -1059,6 +1059,7 @@ export default function PurposeDropdown() {
                           min="1"
                           value={amount}
                           onChange={handleAmountChange}
+                          onWheel={(e) => e.target.blur()}
                         />
                       </div>
                       {Number(amount) > 0 && (
@@ -1127,7 +1128,7 @@ export default function PurposeDropdown() {
                     <>
                       <div className="pd-field">
                         <label className="pd-label">Advance Amount / आगाऊ रक्कम *</label>
-                        <input type="number" className="pd-input" placeholder="Enter advance amount" min="1" max={baseAmount} value={payNowAmount} onChange={handlePayNowChange} />
+                        <input type="number" className="pd-input" placeholder="Enter advance amount" min="1" max={baseAmount} value={payNowAmount} onChange={handlePayNowChange} onWheel={(e) => e.target.blur()} />
                       </div>
                       <div className="pd-amount-row pd-amount-row--amber">
                         <span className="pd-amount-row__label">Remaining / उर्वरित रक्कम</span>
@@ -1275,7 +1276,7 @@ export default function PurposeDropdown() {
                         ? "Price Per Date / प्रति तारीख किंमत *"
                         : "Enter Amount / रक्कम टाका *"}
                     </label>
-                    <input type="number" className="pd-input" placeholder="Enter amount" min="1" value={amount} onChange={handleAmountChange} />
+                    <input type="number" className="pd-input" placeholder="Enter amount" min="1" value={amount} onChange={handleAmountChange} onWheel={(e) => e.target.blur()} />
                   </div>
                   {Number(amount) > 0 && !selectedSeva.allowMultiDate && (
                     <div className="pd-amount-row pd-amount-row--green">
@@ -1416,7 +1417,7 @@ export default function PurposeDropdown() {
                   )}
                   <div className="pd-field">
                     <label className="pd-label">Pay Now / आता भरा *</label>
-                    <input type="number" className="pd-input" placeholder="Enter amount to pay now" min="1" max={currentRemainingAmount} value={payNowAmount} onChange={handlePayNowChange} />
+                    <input type="number" className="pd-input" placeholder="Enter amount to pay now" min="1" max={currentRemainingAmount} value={payNowAmount} onChange={handlePayNowChange} onWheel={(e) => e.target.blur()} />
                   </div>
                   <div className="pd-amount-row pd-amount-row--amber">
                     <span className="pd-amount-row__label">Remaining / उर्वरित रक्कम</span>

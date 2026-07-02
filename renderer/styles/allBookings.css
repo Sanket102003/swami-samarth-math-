@@ -11,6 +11,13 @@
 /* ==========================================
    SEARCH BOX
 ========================================== */
+.ab-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+}
+
 .ab-search-box {
   margin-top: 20px;
   margin-bottom: 20px;

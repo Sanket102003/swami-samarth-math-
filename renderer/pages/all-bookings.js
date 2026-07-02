@@ -165,7 +165,19 @@ function AllBookings() {
       <Sidebar />
 
       <div className="db-main">
-        <Header title="All Bookings / सर्व बुकिंग" />
+        <div className="ab-sticky-top">
+          <Header title="All Bookings / सर्व बुकिंग" />
+
+          {/* SEARCH BOX */}
+          <div className="ab-search-box">
+            <input
+              type="text"
+              placeholder="Search by Name, Booking ID, or Phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* PAGE ERROR */}
         {pageError && (
@@ -186,16 +198,6 @@ function AllBookings() {
             <button onClick={() => setCancelMsg({ text: "", type: "" })} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px" }}>✕</button>
           </div>
         )}
-
-        {/* SEARCH BOX */}
-        <div className="ab-search-box">
-          <input
-            type="text"
-            placeholder="Search by Name, Booking ID, or Phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
 
         {/* BOOKING LIST */}
         <div className="ab-booking-list">
