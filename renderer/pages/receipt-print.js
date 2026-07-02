@@ -65,6 +65,15 @@ function formatAmount(value) {
   return !isNaN(n) && n > 0 ? n.toLocaleString("en-IN") : "";
 }
 
+function isUPIPaymentMethod(paymentMode) {
+  return (
+    paymentMode === "UPI" ||
+    paymentMode === "ICICI Bank" ||
+    paymentMode === "SBI Bank" ||
+    paymentMode === "BCCB Bank"
+  );
+}
+
 // ── Field Row component ───────────────────────────────────────────────────
 function Field({ label, value, highlight }) {
   if (!value) return null;
@@ -103,7 +112,10 @@ export default function ReceiptPrint() {
       const parsed = JSON.parse(saved);
       setBooking(parsed);
 
-      if ((parsed.bank === "UPI" || parsed.receiptType === "Tax") && !parsed.utrNumber) {
+      const paymentMode = parsed.bank || parsed.paymentType || "";
+      const isUPIPayment = isUPIPaymentMethod(paymentMode);
+
+      if ((isUPIPayment || parsed.receiptType === "Tax") && !parsed.utrNumber) {
         apiRequest(`/get_booking?bookingId=${parsed.bookingId}`)
           .then((res) => {
             if (res.booking) setBooking(res.booking);
@@ -151,9 +163,10 @@ export default function ReceiptPrint() {
   const gotra        = booking.gotra || "";
   const paymentMode  = booking.bank || booking.paymentType || "";
   const chequeNo     = booking.chequeNumber || "";
-  const utrNo        = booking.utrNumber || "";
+  const utrNumber    = booking.utrNumber || "";
+  const isUPIPayment = isUPIPaymentMethod(paymentMode);
   const showCheque   = paymentMode === "Cheque" && chequeNo;
-  const showUTR      = paymentMode === "UPI" && utrNo;
+  const showUTR      = isUPIPayment && utrNumber;
   const paidAmt      = booking.paidAmount ?? booking.advance ?? booking.amount ?? 0;
   const paidDisplay  = formatAmount(paidAmt);
   const paidWords    = numberToWordsMarathi(paidAmt);
@@ -526,6 +539,15 @@ export default function ReceiptPrint() {
           color: #15803d;
         }
 
+        .rp-payment-row {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          font-size: 12px;
+          font-weight: 600;
+          color: #15803d;
+        }
+
         .rp-footer-hint {
           font-size: 11px;
           color: #c49a6c;
@@ -704,7 +726,7 @@ export default function ReceiptPrint() {
                 )}
                 {showUTR && (
                   <span className="rp-extra-pill rp-extra-pill--utr">
-                    ✅ UTR: {utrNo}
+                    ✅ UTR: {utrNumber}
                   </span>
                 )}
               </div>
@@ -712,9 +734,18 @@ export default function ReceiptPrint() {
 
             {/* Footer */}
             <div className="rp-footer">
-              <span className="rp-payment-pill">
-                💳 {paymentMode || "Cash"}
-              </span>
+              <div className="rp-payment-row">
+                <span>
+                  <strong>Payment Method:</strong>{" "}
+                  {isUPIPayment ? "UPI" : paymentMode || "Cash"}
+                </span>
+
+                {isUPIPayment && utrNumber && (
+                  <span style={{ marginLeft: "20px" }}>
+                    <strong>UTR No:</strong> {utrNumber}
+                  </span>
+                )}
+              </div>
               <span className="rp-footer-hint">
                 नोंदणी क्र.एफ/१५१३/पालघर · मो. ९१६८६०७५५०
               </span>
@@ -746,7 +777,7 @@ export default function ReceiptPrint() {
             <div className="print-only r-chequeno">धनादेश क्र.: {chequeNo}</div>
           )}
           {showUTR && (
-            <div className="print-only r-utrno">UTR: {utrNo}</div>
+            <div className="print-only r-utrno">UTR: {utrNumber}</div>
           )}
         </div>
 
