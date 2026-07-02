@@ -29,6 +29,7 @@ export default function TaxReceipt() {
   const [paymentSessionId, setPaymentSessionId] = useState("");
   const [pendingBookingId, setPendingBookingId] = useState("");
   const cfReadyRef = useRef(false);
+  const pendingBookingPayloadRef = useRef(null);
 
   // Cheque fields
   const [payingBankName, setPayingBankName] = useState("");
@@ -79,7 +80,12 @@ export default function TaxReceipt() {
             setErrorMsg(result.error.message || "Payment failed or cancelled.");
             setShowPayment(false);
           } else if (result?.paymentDetails) {
-            localStorage.setItem("lastBooking", JSON.stringify({ bookingId: pendingBookingId }));
+            const bookingPayload = pendingBookingPayloadRef.current || {};
+            localStorage.setItem("lastBooking", JSON.stringify({
+              ...bookingPayload,
+              bookingId: pendingBookingId,
+              bank: "UPI",
+            }));
             localStorage.removeItem("bookingForm");
             router.push(`/booking-success?id=${encodeURIComponent(pendingBookingId)}`);
           }
@@ -220,6 +226,7 @@ export default function TaxReceipt() {
         }
 
         // Step 3: Show Cashfree QR modal (triggered by useEffect)
+        pendingBookingPayloadRef.current = bookingPayload;
         setPendingBookingId(orderId);
         setPaymentSessionId(orderRes.payment_session_id);
         setShowPayment(true);

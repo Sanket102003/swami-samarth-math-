@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session } from "electron";
+import { app, BrowserWindow, ipcMain, session } from "electron";
 import serve from "electron-serve";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -71,6 +71,20 @@ async function createWindow() {
     await loadURL(mainWindow);
   }
 }
+
+ipcMain.on("print-receipt", (event, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  win?.webContents.print(
+    {
+      silent: false,
+      printBackground: true,
+      pageSize: { width: 185000, height: 125000 },
+    },
+    (success, errorType) => {
+      if (!success) console.error("Print failed:", errorType);
+    }
+  );
+});
 
 app.whenReady().then(createWindow);
 
