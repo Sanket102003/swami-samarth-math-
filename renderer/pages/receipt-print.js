@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import apiRequest from "../services/api";
 
 const { ipcRenderer } = typeof window !== "undefined" && window.require
   ? window.require("electron")
@@ -99,8 +100,16 @@ export default function ReceiptPrint() {
   useEffect(() => {
     const saved = localStorage.getItem("lastBooking");
     if (saved) {
-      try { setBooking(JSON.parse(saved)); }
-      catch { setBooking(null); }
+      const parsed = JSON.parse(saved);
+      setBooking(parsed);
+
+      if ((parsed.bank === "UPI" || parsed.receiptType === "Tax") && !parsed.utrNumber) {
+        apiRequest(`/get_booking?bookingId=${parsed.bookingId}`)
+          .then((res) => {
+            if (res.booking) setBooking(res.booking);
+          })
+          .catch(() => {});
+      }
     }
   }, []);
 
