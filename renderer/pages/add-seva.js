@@ -379,13 +379,13 @@ function AddSeva() {
               <p className="as-step-desc">Is this a special festival event or a regular daily seva?</p>
               <div className="as-type-grid">
                 <button type="button" className={`as-type-btn ${eventType === "special" ? "as-type-btn--active" : ""}`} onClick={() => setEventType("special")}>
-                  <span className="as-type-icon">✨</span>
+                  <span className="as-type-icon"></span>
                   <span className="as-type-title">Special Events</span>
                   <span className="as-type-sub">विशेष कार्यक्रम</span>
                   <span className="as-type-hint">Festival-based, specific dates (e.g. Ram Navami Bhandara)</span>
                 </button>
                 <button type="button" className={`as-type-btn ${eventType === "regular" ? "as-type-btn--active" : ""}`} onClick={() => setEventType("regular")}>
-                  <span className="as-type-icon">📋</span>
+                  <span className="as-type-icon"></span>
                   <span className="as-type-title">Regular Events</span>
                   <span className="as-type-sub">नियमित कार्यक्रम</span>
                   <span className="as-type-hint">Daily/weekly sevas (e.g. Abhishek, Donation, Vidaprasad)</span>
@@ -465,13 +465,13 @@ function AddSeva() {
                   <p className="as-step-desc">Can users pay in advance (partial) or must they pay the full amount?</p>
                   <div className="as-type-grid">
                     <button type="button" className={`as-type-btn ${paymentOptions === "full" ? "as-type-btn--active" : ""}`} onClick={() => setPaymentOptions("full")}>
-                      <span className="as-type-icon">💰</span>
+                      <span className="as-type-icon"></span>
                       <span className="as-type-title">Full Payment Only</span>
                       <span className="as-type-sub">फक्त पूर्ण पेमेंट</span>
                       <span className="as-type-hint">e.g. Shiraprasad, Vidaprasad — must pay full at booking</span>
                     </button>
                     <button type="button" className={`as-type-btn ${paymentOptions === "full_advance" ? "as-type-btn--active" : ""}`} onClick={() => setPaymentOptions("full_advance")}>
-                      <span className="as-type-icon">📋</span>
+                      <span className="as-type-icon"></span>
                       <span className="as-type-title">Full + Advance</span>
                       <span className="as-type-sub">पूर्ण + आगाऊ</span>
                       <span className="as-type-hint">e.g. Full/Half Bhandara — users can pay partial advance now</span>
@@ -544,7 +544,7 @@ function AddSeva() {
               {/* ── Require Gotra ── */}
               <div className="as-toggle-row" style={{ marginTop: "12px" }}>
                 <div>
-                  <p className="as-toggle-title">🙏 Require Gotra / गोत्र आवश्यक</p>
+                  <p className="as-toggle-title"> Require Gotra / गोत्र आवश्यक</p>
                   <p className="as-toggle-desc">If ON, users must select their Gotra when booking this seva</p>
                 </div>
                 <label className="as-switch">
@@ -613,10 +613,10 @@ function AddSeva() {
                     >
                       <div className="as-seva-info">
                         <div className="as-seva-badge">
-                          {seva.eventType === "special" ? "✨ Special" : "📋 Regular"}
+                          {seva.eventType === "special" ? " Special" : " Regular"}
                           {isBeingEdited && (
                             <span style={{ marginLeft: "6px", color: "#c2410c", fontSize: "11px", fontWeight: 700 }}>
-                              ✏️ Editing
+                               Editing
                             </span>
                           )}
                         </div>
@@ -652,7 +652,7 @@ function AddSeva() {
                           }}
                           onClick={() => isBeingEdited ? resetForm() : handleEdit(seva)}
                         >
-                          {isBeingEdited ? "✕ Cancel" : "✏️ Edit"}
+                          {isBeingEdited ? "✕ Cancel" : " Edit"}
                         </button>
 
                         {/* Activate / Deactivate */}
