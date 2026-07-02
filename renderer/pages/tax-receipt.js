@@ -189,6 +189,7 @@ export default function TaxReceipt() {
       payingBankName: isChequeSelected ? payingBankName.trim() : "",
       chequeNumber:   isChequeSelected ? chequeNumber.trim() : "",
       chequeDate:     isChequeSelected ? chequeDate : "",
+      upiId:          savedForm.upiId || "",
       reason: savedForm.reason || "",
     };
 

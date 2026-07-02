@@ -163,10 +163,12 @@ export default function ReceiptPrint() {
   const gotra        = booking.gotra || "";
   const paymentMode  = booking.bank || booking.paymentType || "";
   const chequeNo     = booking.chequeNumber || "";
+  const upiId        = booking.upiId || "";
   const utrNumber    = booking.utrNumber || "";
   const isUPIPayment = isUPIPaymentMethod(paymentMode);
-  const showCheque   = paymentMode === "Cheque" && chequeNo;
-  const showUTR      = isUPIPayment && utrNumber;
+  const showUPIId    = paymentMode === "UPI" && upiId && !utrNumber;
+  const showUTR      = isUPIPayment && !!utrNumber;
+  const showCheque   = paymentMode === "Cheque" && !!chequeNo;
   const paidAmt      = booking.paidAmount ?? booking.advance ?? booking.amount ?? 0;
   const paidDisplay  = formatAmount(paidAmt);
   const paidWords    = numberToWordsMarathi(paidAmt);
@@ -712,7 +714,7 @@ export default function ReceiptPrint() {
             </div>
 
             {/* Extra info — balance / cheque / utr */}
-            {(hasBalance || showCheque || showUTR) && (
+            {(hasBalance || showCheque || showUPIId || showUTR) && (
               <div className="rp-extra-section">
                 {hasBalance && (
                   <span className="rp-extra-pill rp-extra-pill--balance">
@@ -722,6 +724,11 @@ export default function ReceiptPrint() {
                 {showCheque && (
                   <span className="rp-extra-pill rp-extra-pill--cheque">
                     📝 धनादेश क्र.: {chequeNo}
+                  </span>
+                )}
+                {showUPIId && (
+                  <span className="rp-extra-pill rp-extra-pill--utr">
+                    📱 UPI ID: {upiId}
                   </span>
                 )}
                 {showUTR && (
@@ -740,7 +747,13 @@ export default function ReceiptPrint() {
                   {isUPIPayment ? "UPI" : paymentMode || "Cash"}
                 </span>
 
-                {isUPIPayment && utrNumber && (
+                {showUPIId && (
+                  <span style={{ marginLeft: "20px" }}>
+                    <strong>UPI ID:</strong> {upiId}
+                  </span>
+                )}
+
+                {showUTR && (
                   <span style={{ marginLeft: "20px" }}>
                     <strong>UTR No:</strong> {utrNumber}
                   </span>
@@ -775,6 +788,9 @@ export default function ReceiptPrint() {
           )}
           {showCheque && (
             <div className="print-only r-chequeno">धनादेश क्र.: {chequeNo}</div>
+          )}
+          {showUPIId && (
+            <div className="print-only r-utrno">UPI ID: {upiId}</div>
           )}
           {showUTR && (
             <div className="print-only r-utrno">UTR: {utrNumber}</div>
