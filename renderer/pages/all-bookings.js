@@ -276,7 +276,14 @@ function AllBookings() {
                         <div className="ab-amount">
                           {formatCurrency(booking.advance ?? booking.paidAmount)}
                         </div>
-                        <div className="ab-amount">
+                        <div
+                          className="ab-amount"
+                          style={
+                            Number(booking.remainingAmount) > 0
+                              ? { color: "#dc2626", fontWeight: 700 }
+                              : undefined
+                          }
+                        >
                           {formatCurrency(booking.remainingAmount)}
                         </div>
                         <div className={`ab-status ${statusClass}`}>{status}</div>

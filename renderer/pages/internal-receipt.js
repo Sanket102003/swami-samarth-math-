@@ -10,6 +10,7 @@ export default function InternalReceipt() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
 
   const ADVANCE_ALLOWED_PURPOSES = ["full bhandara", "half bhandara", "shiraprasad"];
 
@@ -144,9 +145,20 @@ export default function InternalReceipt() {
         <div className="tr-card">
           <div className="tr-card-header">
             <div className="tr-card-icon"></div>
-            <div>
-              <p className="tr-card-title">Payment Method / पेमेंट पद्धत</p>
-              <p className="tr-card-subtitle">Internal receipts accept cash only</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+              <div>
+                <p className="tr-card-title">Payment Method / पेमेंट पद्धत</p>
+                <p className="tr-card-subtitle">Internal receipts accept cash only</p>
+              </div>
+
+              <button
+                className="secondary-btn"
+                onClick={() => router.push("/new-booking")}
+                disabled={loading}
+                style={{ marginLeft: "auto" }}
+              >
+                ← Back / मागे
+              </button>
             </div>
           </div>
           <div className="tr-card-body">

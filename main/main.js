@@ -88,7 +88,15 @@ ipcMain.on("print-receipt", (event, options) => {
 
 app.whenReady().then(createWindow);
 
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
+  // Force any pending localStorage/session writes to disk before quitting.
+  // Without this, data saved just before closing (e.g. login token) can be
+  // lost since Chromium writes localStorage to disk asynchronously.
+  try {
+    await session.defaultSession.flushStorageData();
+  } catch (err) {
+    console.error("flushStorageData error:", err);
+  }
   if (process.platform !== "darwin") app.quit();
 });
 

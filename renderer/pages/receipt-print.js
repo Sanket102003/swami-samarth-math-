@@ -108,21 +108,37 @@ export default function ReceiptPrint() {
 
   useEffect(() => {
     const saved = localStorage.getItem("lastBooking");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setBooking(parsed);
+    if (!saved) return;
 
-      const paymentMode = parsed.bank || parsed.paymentType || "";
-      const isUPIPayment = isUPIPaymentMethod(paymentMode);
+    const parsed = JSON.parse(saved);
+    setBooking(parsed);
 
-      if ((isUPIPayment || parsed.receiptType === "Tax") && !parsed.utrNumber) {
-        apiRequest(`/get_booking?bookingId=${parsed.bookingId}`)
-          .then((res) => {
-            if (res.booking) setBooking(res.booking);
-          })
-          .catch(() => {});
+    // Online payments store the Cashfree orderId (e.g. "SSMATH-...") as
+    // bookingId until the webhook confirms and generates the real
+    // BK-/IT- id. Poll until the real booking record is available.
+    const isOrderId = String(parsed.bookingId || "").startsWith("SSMATH-");
+    if (!isOrderId) return;
+
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const poll = async () => {
+      try {
+        const res = await apiRequest(`/booking_by_order?orderId=${encodeURIComponent(parsed.bookingId)}`);
+        if (res?.found && res.booking) {
+          setBooking(res.booking);
+          return;
+        }
+      } catch (err) {
+        console.error("Receipt booking lookup error:", err);
       }
-    }
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        setTimeout(poll, 1500);
+      }
+    };
+
+    poll();
   }, []);
 
   const handlePrint = () => {

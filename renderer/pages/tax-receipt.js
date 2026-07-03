@@ -274,9 +274,20 @@ export default function TaxReceipt() {
         <div className="tr-card">
           <div className="tr-card-header">
             <div className="tr-card-icon">💳</div>
-            <div>
-              <p className="tr-card-title">Payment Details / पेमेंट तपशील</p>
-              <p className="tr-card-subtitle">Select payment method and tax exemption</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1 }}>
+              <div>
+                <p className="tr-card-title">Payment Details / पेमेंट तपशील</p>
+                <p className="tr-card-subtitle">Select payment method and tax exemption</p>
+              </div>
+
+              <button
+                className="secondary-btn"
+                onClick={() => router.push("/new-booking")}
+                disabled={loading || showPayment}
+                style={{ marginLeft: "auto" }}
+              >
+                ← Back / मागे
+              </button>
             </div>
           </div>
           <div className="tr-card-body">

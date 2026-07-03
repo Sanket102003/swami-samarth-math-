@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import withAuth from "../utils/withAuth";
 import apiRequest from "../services/api";
 import Pagination from "../components/Pagination";
-import { purposes } from "../constants/purposes";
+import PurposeMultiSelect from "../components/PurposeMultiSelect";
 
 function Reports() {
   /* ======================================================
@@ -12,7 +12,10 @@ function Reports() {
   ====================================================== */
   const [reportData, setReportData] = useState([]);
   const [receiptType, setReceiptType] = useState("All");
-  const [purpose, setPurpose] = useState("All");
+  const [purposeOptions, setPurposeOptions] = useState([]);
+const [selectedPurposes, setSelectedPurposes] = useState([]);
+const [tomorrowOnly, setTomorrowOnly] = useState(false);
+const [selectedIds, setSelectedIds] = useState(new Set());
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [amountOperator, setAmountOperator] = useState("");
@@ -23,7 +26,6 @@ function Reports() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
 
-  const purposeOptions = [{ name: "All" }, ...purposes];
 
   /* ======================================================
      INITIAL LOAD
@@ -42,12 +44,26 @@ function Reports() {
     loadReportsPage();
   }, []);
 
+  useEffect(() => {
+    const loadPurposes = async () => {
+      try {
+        const data = await apiRequest("/get_seva_list");
+        const list = data.sevaList || [];
+        const names = [...new Set(list.map((s) => s.displayName).filter(Boolean))].sort();
+        setPurposeOptions(names);
+      } catch (err) {
+        console.error("Purpose list fetch error:", err);
+      }
+    };
+    loadPurposes();
+  }, []);
+
   /* ======================================================
      RESET PAGE WHEN VIEW TYPE / AMOUNT FILTER CHANGES
   ====================================================== */
   useEffect(() => {
     setCurrentPage(1);
-  }, [viewType, amountOperator, amountValue]);
+  }, [viewType, amountOperator, amountValue, selectedPurposes, tomorrowOnly]);
 
   /* ======================================================
      FETCH FILTERED REPORTS
@@ -56,7 +72,6 @@ function Reports() {
     try {
       const params = new URLSearchParams();
       if (receiptType && receiptType !== "All") params.append("receiptType", receiptType);
-      if (purpose && purpose !== "All") params.append("purpose", purpose);
       if (fromDate) params.append("fromDate", fromDate);
       if (toDate) params.append("toDate", toDate);
 
@@ -176,14 +191,29 @@ function Reports() {
   /* ======================================================
      UI
   ====================================================== */
-  /* ── Amount filter applied client-side after API fetch ── */
   const filteredData = reportData.filter((item) => {
-    if (!amountOperator || amountValue === "") return true;
-    const itemAmt = Number(item.amount || 0);
-    const filterAmt = Number(amountValue);
-    if (amountOperator === "=")  return itemAmt === filterAmt;
-    if (amountOperator === ">=") return itemAmt >= filterAmt;
-    if (amountOperator === "<=") return itemAmt <= filterAmt;
+    if (amountOperator && amountValue !== "") {
+      const itemAmt = Number(item.amount || 0);
+      const filterAmt = Number(amountValue);
+      if (amountOperator === "=" && itemAmt !== filterAmt) return false;
+      if (amountOperator === ">=" && itemAmt < filterAmt) return false;
+      if (amountOperator === "<=" && itemAmt > filterAmt) return false;
+    }
+
+    if (selectedPurposes.length > 0 && !selectedPurposes.includes(item.purpose)) {
+      return false;
+    }
+
+    if (tomorrowOnly) {
+      if (!item.bookingDate) return false;
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const itemDate = new Date(item.bookingDate);
+      itemDate.setHours(0, 0, 0, 0);
+      if (itemDate.getTime() !== tomorrow.getTime()) return false;
+    }
+
     return true;
   });
 
@@ -234,7 +264,18 @@ function Reports() {
       ),
     },
     {
+      label: "Purpose",
+      element: (
+        <PurposeMultiSelect
+          options={purposeOptions}
+          selected={selectedPurposes}
+          onChange={setSelectedPurposes}
+        />
+      ),
+    },
+    {
       label: "From Date",
+
 
       element: (
         <input
@@ -318,6 +359,77 @@ function Reports() {
 
   const activeColumns = viewType === "Devotee Details" ? devoteeColumns : columns;
 
+  /* ======================================================
+     ROW SELECTION + PRINT SELECTED
+  ====================================================== */
+  const toggleSelectRow = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allPagedSelected =
+    pagedData.length > 0 && pagedData.every((item) => selectedIds.has(item._id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allPagedSelected) pagedData.forEach((item) => next.delete(item._id));
+      else pagedData.forEach((item) => next.add(item._id));
+      return next;
+    });
+  };
+
+  const handlePrintSelected = () => {
+    const rowsToPrint = displayData.filter((item) => selectedIds.has(item._id));
+    if (rowsToPrint.length === 0) {
+      setReportMsg({ text: "Please select at least one record to print.", type: "error" });
+      return;
+    }
+
+    const printWindow = window.open("", "_blank");
+    const headers = activeColumns.map((c) => c.header);
+
+    const rowsHtml = rowsToPrint
+      .map(
+        (item) =>
+          `<tr>${activeColumns
+            .map((c) => `<td>${c.render(item)}</td>`)
+            .join("")}</tr>`
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Booking Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 13px; }
+            th { background: #f3f4f6; }
+          </style>
+        </head>
+        <body>
+          <h2>Swami Samarth Math — Booking Report</h2>
+          <table>
+            <thead>
+              <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
     <div className="dashboard">
       <Sidebar />
@@ -383,13 +495,73 @@ function Reports() {
             </button>
 
             <button
+              className="clear-filters-btn"
+              onClick={async () => {
+                setReceiptType("All");
+                setSelectedPurposes([]);
+                setFromDate("");
+                setToDate("");
+                setAmountOperator("");
+                setAmountValue("");
+                setTomorrowOnly(false);
+                setCurrentPage(1);
+                setSelectedIds(new Set());
+                setLoading(true);
+                try {
+                  const data = await apiRequest("/reports");
+                  setReportData(data.reports || []);
+                } catch (err) {
+                  console.error("Clear filters fetch error:", err);
+                  setReportMsg({ text: err.message || "Unable to reload reports", type: "error" });
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Clear Filters
+            </button>
+
+            <button
+              className="download-report-btn"
+              onClick={handlePrintSelected}
+            >
+              🖨️ Print Selected
+            </button>
+
+            <button
               className="download-report-btn"
               onClick={() => handleDownload(displayData)}
             >
-
               ⬇ Download Report
             </button>
           </div>
+        </div>
+
+        {/* ── Tomorrow's Bookings ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            margin: "10px 0",
+            fontSize: "14px",
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={tomorrowOnly}
+              onChange={(e) => setTomorrowOnly(e.target.checked)}
+            />
+            Tomorrow's Bookings Only
+          </label>
         </div>
 
         {/* ── RECORD COUNT ── */}
@@ -412,6 +584,15 @@ function Reports() {
           <table className="report-table">
             <thead>
               <tr>
+                <th>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <input
+                      type="checkbox"
+                      checked={allPagedSelected}
+                      onChange={toggleSelectAll}
+                    />
+                  </label>
+                </th>
                 {activeColumns.map(({ header }) => (
                   <th key={header}>{header}</th>
                 ))}
@@ -419,8 +600,14 @@ function Reports() {
             </thead>
             <tbody>
               {pagedData.map((item, index) => (
-
                 <tr key={item._id || index}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item._id)}
+                      onChange={() => toggleSelectRow(item._id)}
+                    />
+                  </td>
                   {activeColumns.map(({ header, render }) => (
                     <td key={header}>{render(item)}</td>
                   ))}

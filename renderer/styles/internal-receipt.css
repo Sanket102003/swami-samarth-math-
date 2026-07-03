@@ -206,3 +206,12 @@
 .ir-internal-section {
   margin-top: 16px;
 }
+
+/* BACK BUTTON — inline in card header (not full-width like .ir-internal-actions) */
+.tr-card-header .secondary-btn {
+  flex: 0 0 auto;
+  width: auto;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+}

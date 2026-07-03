@@ -503,3 +503,12 @@
   background: #7c3aed;
   color: #fff;
 }
+
+/* BACK BUTTON — inline in card header (not full-width like .tr-actions) */
+.tr-card-header .secondary-btn {
+  flex: 0 0 auto;
+  width: auto;
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+}

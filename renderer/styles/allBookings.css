@@ -240,7 +240,10 @@
    STATUS COLORS
 ========================================== */
 .ab-status-approved  { color: #16a34a; }
-.ab-status-pending   { color: #d97706; }
+.ab-status-pending {
+  color: #dc2626;
+  font-weight: 700;
+}
 .ab-status-cancelled { color: #dc2626; }
 
 /* ==========================================
