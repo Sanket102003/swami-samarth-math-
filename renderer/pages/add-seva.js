@@ -268,7 +268,7 @@ function AddSeva() {
       setSevaList(sevaList.map((s) =>
         (s._id || s.id) === id ? { ...s, isActive: newActive } : s
       ));
-      showToast(newActive ? "✅ Seva activated" : "🚫 Seva deactivated");
+      showToast(newActive ? " Seva activated" : " Seva deactivated");
     } catch (err) {
       setSevaError(err.message || "Failed to update seva");
     }
