@@ -60,7 +60,7 @@ function NewBooking() {
               onClick={() => setSelected("internal")}
             >
               <h4>Shree Swami Samarth Receipt</h4>
-              <p>श्री स्वामी समर्थ पावती (रोख)</p>
+              <p>श्री स्वामी समर्थ पावती (SYM)</p>
             </div>
 
             {/* TAX RECEIPT */}
