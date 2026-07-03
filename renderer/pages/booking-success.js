@@ -10,7 +10,7 @@ export default function BookingSuccess() {
   const [receiptId, setReceiptId] = useState("Loading...");
   const rawId = router.query.id;
 
-  const API_BASE = "https://www.swamisamrathbhuigaon.com/_functions";
+  const API_BASE = "https://www.swamisamarthmathbhuigaon.com/_functions";
 
   useEffect(() => {
     if (!rawId) return;

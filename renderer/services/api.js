@@ -1,5 +1,5 @@
 const BASE_URL =
-  "https://www.swamisamrathbhuigaon.com/_functions";
+  "https://www.swamisamarthmathbhuigaon.com/_functions";
 
 async function apiRequest(endpoint, options = {}) {
   const token =
