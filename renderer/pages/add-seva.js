@@ -519,7 +519,7 @@ function AddSeva() {
               {eventType === "special" && dateRule && (
                 <div className="as-toggle-row" style={{ marginTop: "16px" }}>
                   <div>
-                    <p className="as-toggle-title">🚫 Block on Special Event Dates</p>
+                    <p className="as-toggle-title"> Block on Special Event Dates</p>
                     <p className="as-toggle-desc">If ON, users cannot book this seva on dates reserved for special events</p>
                   </div>
                   <label className="as-switch">
@@ -628,9 +628,9 @@ function AddSeva() {
                           {seva.maxPerDate > 0 && <><span>·</span><span>Max {seva.maxPerDate}/date</span></>}
                           <span>·</span>
                           <span style={{ color: seva.isActive === false ? "#dc2626" : "#16a34a", fontWeight: 700 }}>
-                            {seva.isActive === false ? "🚫 Inactive" : "✅ Active"}
+                            {seva.isActive === false ? " Inactive" : " Active"}
                           </span>
-                          {seva.blockOnSpecialDates && <><span>·</span><span style={{ color: "#f97316", fontWeight: 600 }}>🚫 Blocked on special dates</span></>}
+                          {seva.blockOnSpecialDates && <><span>·</span><span style={{ color: "#f97316", fontWeight: 600 }}> Blocked on special dates</span></>}
                         </div>
                       </div>
 
